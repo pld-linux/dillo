@@ -2,7 +2,7 @@ Summary:	DILLO - The GTK Web Browser
 Summary(pl):	DILLO - przegl±darka web
 Name:		dillo
 Version:	0.6.6
-Release:	3
+Release:	4
 License:	GPL
 Group:		X11/Applications/Networking
 Source0:	http://dillo.cipsga.org.br/download/%{name}-%{version}.tar.gz
@@ -10,6 +10,8 @@ Source1:	%{name}.desktop
 Source2:	%{name}.png
 Patch0:		%{name}-gzip_fallback.patch
 Patch1:		http://matzar.republika.pl/stuff/%{name}-gettext.patch.gz
+Patch2:		http://bobuk.ipost.ru/packages/dillo/files/%{name}-%{version}-charset.patch
+Patch3:		%{name}-encodings.patch
 URL:		http://dillo.cipsga.org.br/
 BuildRequires:	autoconf
 BuildRequires:	automake
@@ -31,16 +33,15 @@ sieci.
 %setup -q
 %patch0 -p1
 %patch1 -p1
+%patch2 -p1
+%patch3 -p1
 
 %build
 rm -f missing
 aclocal
 %{__autoconf}
 %{__automake}
-if [ -f %{_pkgconfigdir}/libpng12.pc ] ; then
-	CPPFLAGS="`pkg-config libpng12 --cflags`"
-fi
-%configure CPPFLAGS="$CPPFLAGS"
+%configure --enable-cookies
 %{__make}
 
 %install
@@ -57,7 +58,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
-%doc AUTHORS ChangeLog dillorc doc/{*.txt,README}
+%doc AUTHORS ChangeLog dillorc encodings doc/{*.txt,README}
 %attr(755,root,root) %{_bindir}/dillo
 %{_applnkdir}/Network/WWW/*
 %{_pixmapsdir}/*
