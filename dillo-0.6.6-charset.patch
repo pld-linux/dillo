@@ -1,0 +1,156 @@
+diff -BurN dillo-0.6.6.old/dillorc dillo-0.6.6/dillorc
+--- dillo-0.6.6.old/dillorc	Thu May 30 01:36:08 2002
++++ dillo-0.6.6/dillorc	Sat Jun  1 17:31:30 2002
+@@ -35,6 +35,9 @@
+ # If you prefer oblique over italic fonts, uncoment next line
+ #use_oblique=YES
+ 
++# Use this value as charset part of font for loading. (default is iso8859-1)
++# font_charset=iso8859-5
++
+ # Show ALT popup for images?
+ show_alt=YES
+ 
+diff -BurN dillo-0.6.6.old/src/dw_style.c dillo-0.6.6/src/dw_style.c
+--- dillo-0.6.6.old/src/dw_style.c	Tue May 28 05:14:03 2002
++++ dillo-0.6.6/src/dw_style.c	Sat Jun  1 17:31:30 2002
+@@ -243,45 +243,44 @@
+ {
+    char fontname[256], *ItalicChar;
+ 
+-   ItalicChar = prefs.use_oblique ? "o" : "i";
+-   sprintf (fontname, "-*-%s-%s-%s-*-*-%d-*-75-75-*-*-iso8859-1",
+-            font->name,
+-            font->bold ? "bold" : "medium",
+-            font->italic ? ItalicChar : "r",
+-            font->size);
+-   font->font = gdk_font_load(fontname);
+-
+-   if (font->font == NULL && font->italic) {
+-      sprintf(fontname, "-*-%s-%s-%s-*-*-%d-*-75-75-*-*-iso8859-1",
++     ItalicChar = prefs.use_oblique ? "o" : "i";
++     sprintf (fontname, "-*-%s-%s-%s-*-*-%d-*-75-75-*-*-%s",
+               font->name,
+               font->bold ? "bold" : "medium",
+-              (*ItalicChar == 'o') ? "i" : "o",
+-              font->size);
+-      font->font = gdk_font_load(fontname);
+-   }
+-
+-   if (try_all) {
+-      if (font->font == NULL) {
+-         /* Can't load the font - substitute the default instead. */
+-         font->font =
+-            gdk_font_load
+-            ("-adobe-helvetica-medium-r-normal--*-100-*-*-*-*-iso8859-1");
+-      }
+-
+-      if (font->font == NULL) {
+-         /* Try another platform-font that should be available. (iPaq) */
+-         font->font =
+-            gdk_font_load
+-            ("-misc-fixed-medium-r-normal--13-120-75-75-c-80-iso8859-1");
+-      }
+-
+-      if (font->font == NULL) {
+-         /* Can't load any suitable font!  */
+-         g_warning ("Can't load any ISO8859-1 font!?! :(");
+-         font->font =
+-            gdk_font_load("-adobe-helvetica-*-*-*--*-*-*-*-*-*-*-*");
+-      }
+-   }
++              font->italic ? ItalicChar : "r",
++	      font->size,
++	      prefs.font_charset);
++     font->font = gdk_font_load(fontname);
++     
++     if (font->font == NULL && font->italic) {
++	 sprintf(fontname, "-*-%s-%s-%s-*-*-%d-*-75-75-*-*-%s",
++		 font->name,
++		 font->bold ? "bold" : "medium",
++		 (*ItalicChar == 'o') ? "i" : "o",
++		 font->size,
++		 prefs.font_charset);
++        font->font = gdk_font_load(fontname);
++     }
++    
++     if (try_all) {
++        if (font->font == NULL) {
++	    /* Can't load the font - substitute the default instead. */
++	    sprintf(fontname,"-adobe-helvetica-medium-r-normal--*-100-*-*-*-*-%s",prefs.font_charset);
++	    font->font = gdk_font_load (fontname);
++        }
++     
++        if (font->font == NULL) {
++           /* Try another platform-font that should be available. (iPaq) */
++	    sprintf(fontname,"-misc-fixed-medium-r-normal--13-120-75-75-c-80-%s",prefs.font_charset);
++	    font->font = gdk_font_load (fontname);
++        }
++  
++        if (font->font == NULL) {
++           /* Can't load any suitable font!  */
++	    g_warning ("Can't load any font with charset '%s'!?! :(",prefs.font_charset);
++	    font->font = gdk_fontset_load("-adobe-helvetica-*-*-*--*-*-*-*-*-*-*-*,-misc-fixed-*,*");
++        }
++     }
+ 
+    if (font->font) {
+       font->space_width = gdk_char_width (font->font, ' ');
+diff -BurN dillo-0.6.6.old/src/prefs.c dillo-0.6.6/src/prefs.c
+--- dillo-0.6.6.old/src/prefs.c	Wed Apr  3 20:31:46 2002
++++ dillo-0.6.6/src/prefs.c	Sat Jun  1 17:31:30 2002
+@@ -52,6 +52,7 @@
+    { "small_icons", DRC_TOKEN_SMALL_ICONS },
+    { "limit_text_width", DRC_TOKEN_LIMIT_TEXT_WIDTH },
+    { "font_factor", DRC_TOKEN_FONT_FACTOR },
++   { "font_charset", DRC_TOKEN_FONT_CHARSET },
+    { "use_dicache", DRC_TOKEN_USE_DICACHE },
+    { "show_back", DRC_TOKEN_SHOW_BACK },
+    { "show_forw", DRC_TOKEN_SHOW_FORW },
+@@ -172,6 +173,10 @@
+    case DRC_TOKEN_FONT_FACTOR:
+       prefs.font_factor = strtod(scanner->value.v_string, NULL);
+       break;
++   case DRC_TOKEN_FONT_CHARSET:
++       if (prefs.font_charset) g_free(prefs.font_charset);
++       prefs.font_charset = g_strdup(scanner->value.v_string);
++      break;
+    case DRC_TOKEN_LIMIT_TEXT_WIDTH:
+       prefs.limit_text_width = (strcmp(scanner->value.v_string, "YES") == 0);
+       break;
+@@ -338,6 +343,7 @@
+    prefs.small_icons = FALSE;
+    prefs.limit_text_width = FALSE;
+    prefs.font_factor = 1.0;
++   prefs.font_charset = g_strdup("iso8859-1");
+    prefs.use_dicache = FALSE;
+    prefs.show_back=TRUE;
+    prefs.show_forw=TRUE;
+@@ -374,6 +380,8 @@
+    g_free(prefs.no_proxy);
+    if (prefs.no_proxy_vec)
+       g_strfreev(prefs.no_proxy_vec);
++   if (prefs.font_charset)
++      g_free (prefs.font_charset);
+    a_Url_free(prefs.http_proxy);
+    g_free(prefs.fw_fontname);
+    g_free(prefs.vw_fontname);
+diff -BurN dillo-0.6.6.old/src/prefs.h dillo-0.6.6/src/prefs.h
+--- dillo-0.6.6.old/src/prefs.h	Wed Apr  3 20:31:46 2002
++++ dillo-0.6.6/src/prefs.h	Sat Jun  1 17:31:30 2002
+@@ -40,6 +40,7 @@
+    DRC_TOKEN_PANEL_SIZE,
+    DRC_TOKEN_SMALL_ICONS,
+    DRC_TOKEN_FONT_FACTOR,
++   DRC_TOKEN_FONT_CHARSET,
+    DRC_TOKEN_SHOW_ALT,
+    DRC_TOKEN_LIMIT_TEXT_WIDTH,
+    DRC_TOKEN_USE_DICACHE,
+@@ -84,6 +85,7 @@
+    gboolean small_icons;
+    gboolean limit_text_width;
+    gdouble font_factor;
++   char *font_charset;
+    gboolean use_dicache;
+    gboolean show_back;
+    gboolean show_forw;
