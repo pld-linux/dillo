@@ -34,7 +34,7 @@ przegl±dark±, która jest ma³a, stabilna, przyjazna dla developerów,
 u¿yteczna, szybka i rozszerzalna.
 
 %prep
-%setup  -q
+%setup -q
 #%patch0 -p1
 %patch1 -p1
 
