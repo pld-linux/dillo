@@ -2,18 +2,14 @@
 Summary:	DILLO - The GTK Web Browser
 Summary(pl):	DILLO - przegl±darka web
 Name:		dillo
-Version:	0.7.0
-Release:	0.5
+Version:	0.7.1
+Release:	1
 License:	GPL
 Group:		X11/Applications/Networking
 Source0:	http://dillo.auriga.wearlab.de/download/%{name}-%{version}.tar.gz
 Source1:	%{name}.desktop
 Source2:	%{name}.png
 Patch0:		%{name}-gzip_fallback.patch
-#Patch1:		%{name}-gettext.patch
-#Patch2:		http://bobuk.ipost.ru/packages/dillo/files/%{name}-0.6.6-charset.patch
-#Patch3:		%{name}-encodings.patch
-#Patch4:		%{name}-localedir.patch
 Patch1:		%{name}-0.7.0-alt-asp-charset-encodings-sysconfdir.patch
 URL:		http://dillo.auriga.wearlab.de/
 BuildRequires:	autoconf
@@ -33,7 +29,7 @@ Dillo jest ma³±, szybk±, bazuj±c± na bibliotece GTK+ przegl±dark±
 sieci.
 
 %prep
-%setup -q
+%setup  -q
 %patch0 -p1
 %patch1 -p1
 
@@ -42,8 +38,8 @@ rm -f missing
 %{__aclocal}
 %{__autoconf}
 %{__automake}
-%configure --enable-cookies
-
+%configure \
+	--enable-cookies
 %{__make}
 
 %install
@@ -64,7 +60,7 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(644,root,root,755)
 %doc AUTHORS ChangeLog dillorc encodings doc/{*.txt,README}
-%attr(755,root,root) %{_bindir}/dillo
+%attr(755,root,root) %{_bindir}/*
 %{_applnkdir}/Network/WWW/*
 %{_pixmapsdir}/*
 %{_sysconfdir}/*
