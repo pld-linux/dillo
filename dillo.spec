@@ -3,7 +3,7 @@ Summary:	DILLO - The GTK Web Browser
 Summary(pl):	DILLO - przegl±darka web
 Name:		dillo
 Version:	0.7.1.2
-Release:	1
+Release:	0.1
 License:	GPL
 Group:		X11/Applications/Networking
 Source0:	http://dillo.auriga.wearlab.de/download/%{name}-%{version}.tar.gz
@@ -19,7 +19,7 @@ BuildRequires:	libjpeg-devel
 Buildrequires:	libpng-devel >= 1.0.9
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
-%define	_sysconfdir /etc/dillo
+%define		_sysconfdir	/etc/dillo
 
 %description
 Dillo is small, fast, based on GTK+ library web browser written in C.
@@ -63,4 +63,5 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_bindir}/*
 %{_applnkdir}/Network/WWW/*
 %{_pixmapsdir}/*
-%{_sysconfdir}/*
+%dir %{_sysconfdir}
+%config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/*
