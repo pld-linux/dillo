@@ -1,8 +1,8 @@
 [Desktop Entry]
 Name=Dillo
 Comment=Dillo - The GTK Web Browser
-Comment[pl]=illo - przegladarka web
-Exec=dilo
+Comment[pl]=dillo - przegladarka web
+Exec=dillo
 Terminal=1
 Type=Application
 # vi: encoding=utf-8
