@@ -6,5 +6,6 @@ Icon=dillo.png
 Exec=dillo
 Terminal=false
 Type=Application
+Categories=Network;WebBrowser;
 Encoding=UTF-8
 # vi: encoding=utf-8
