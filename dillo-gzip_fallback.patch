@@ -1,5 +1,5 @@
---- dillo-0.6.6/src/IO/file.c.old	Wed Jul  3 11:15:13 2002
-+++ dillo-0.6.6/src/IO/file.c	Wed Jul  3 13:36:12 2002
+--- dillo-0.7.2/src/IO/file.c.orig	Sun May  4 12:33:54 2003
++++ dillo-0.7.2/src/IO/file.c	Sun May  4 12:40:09 2003
 @@ -29,6 +29,7 @@
  #include <stdio.h>
  #include <signal.h>
@@ -8,24 +8,18 @@
  
  #include <errno.h>           /* for errno */
  #include "Url.h"
-@@ -61,10 +62,12 @@
-    char *Filename;
-    const char *ContentType;
-    glong FileSize;
-+   gint ContentEncoding; /* 0 normal, 1 gzipped */ 
- 
+@@ -66,7 +67,7 @@
     pthread_t th1;      /* This transfer's thread id. */
  } DilloFile;
  
+-
 +#define GZIP_ENCODING 1
  
- 
  /*
-@@ -90,18 +93,30 @@
-    gint fds[2], fd;
+  * Local data
+@@ -122,15 +123,27 @@
     struct stat sb;
     DilloFile *Dfile;
-+   gint ContentEncoding = 0;
  
 -   if ( (fd = open(filename, O_RDONLY)) < 0 || pipe(fds) )
 +   if ( (fd = open(filename, O_RDONLY)) < 0 || pipe(fds) ) {
@@ -33,16 +27,13 @@
 -
 +   }
 +   if (strncmp(strrchr(filename, '.'), ".gz", 3) == 0)
-+      ContentEncoding = GZIP_ENCODING; 
-+         
++	   ContentEncoding = GZIP_ENCODING;
     Dfile = g_new(DilloFile, 1);
     Dfile->FD_Read  = fds[0];
     Dfile->FD_Write = fds[1];
     Dfile->FD = fd;
-    Dfile->Filename = g_strdup(filename);
--   Dfile->ContentType = File_content_type(filename);
+    Dfile->FileName = g_strdup(filename);
 -   Dfile->FileSize = fstat(fd, &sb) ? -1 : (glong) sb.st_size;
--
 +   if (ContentEncoding == GZIP_ENCODING) {
 +      gchar *tmp_filename = g_strndup(filename, strlen(filename) - 3);
 +      Dfile->ContentType = File_content_type(tmp_filename);
@@ -54,22 +45,21 @@
 +      Dfile->FileSize = fstat(fd, &sb) ? -1 : (glong) sb.st_size;
 +   }
 +   Dfile->ContentEncoding = ContentEncoding;
+ 
     return Dfile;
  }
- 
-@@ -162,6 +177,7 @@
-    char buf[8192];
+@@ -194,6 +207,7 @@
     DilloFile *Dfile = data;
     ssize_t nbytes;
+    const gchar *ct;
 +   gzFile gzdata;
  
     /* Set this thread to detached state */
     pthread_detach(Dfile->th1);
-@@ -179,13 +195,22 @@
-    strcpy(buf, "\n");
+@@ -221,12 +235,23 @@
     write(Dfile->FD_Write, buf, strlen(buf));
  
--
+ 
 -   /* Append raw file contents */
 -   while ( (nbytes = read(Dfile->FD, buf, 8192)) != 0 ) {
 -      write(Dfile->FD_Write, buf, nbytes);
@@ -86,26 +76,27 @@
 +      while ( (nbytes = read(Dfile->FD, buf, 8192)) != 0 ) {
 +         write(Dfile->FD_Write, buf, nbytes);
 +      }
++
  
--   close(Dfile->FD);
-+      close(Dfile->FD);
+    close(Dfile->FD);
 +   }
     close(Dfile->FD_Write);
     File_dillofile_free(Dfile);
     return NULL;
-@@ -270,7 +295,7 @@
- static void File_get(ChainLink *Info, void *Data, void *ExtraData)
+@@ -339,7 +364,7 @@
+ static void File_get(ChainLink *Info, void *Data1, void *Data2)
  {
     const gchar *path;
 -   gchar *filename;
 +   gchar *filename, *tmp_filename;
     gint fd;
     struct stat sb;
-    IOData_t *io;
-@@ -286,7 +311,15 @@
+    const DilloUrl *Url = Data1;
+@@ -353,8 +378,15 @@
+       filename = g_strdup(g_get_home_dir());
     else
        filename = a_Url_parse_hex_path(Url);
- 
+-
 +stat_point:
     if ( stat(filename, &sb) != 0 ) {
 +      char *ext = strrchr(filename, '.');
