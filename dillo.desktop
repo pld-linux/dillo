@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Dillo
+Comment=Dillo - The GTK Web Browser
+Comment[pl]=illo - przegladarka web
+Exec=dilo
+Terminal=1
+Type=Application
