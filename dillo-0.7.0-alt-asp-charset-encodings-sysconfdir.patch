@@ -653,14 +653,6 @@ diff -Nur old/src/encodings-types.h new/src/encodings-types.h
 diff -Nur old/src/html.c new/src/html.c
 --- old/src/html.c	2004-02-07 00:10:45.000000000 +0100
 +++ new/src/html.c	2004-03-07 18:21:23.000000000 +0100
-@@ -21,6 +21,7 @@
- #include <stdlib.h>
- #include <stdio.h>      /* for sprintf */
- #include <math.h>      /* for rint */
-+#include <errno.h>	/* for iconv error codes */
- 
- #include <gtk/gtk.h>
- 
 @@ -51,6 +52,7 @@
  #include "progressbar.h"
  #include "prefs.h"
