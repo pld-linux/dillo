@@ -84,9 +84,9 @@
 +      }
 +
  
-    close(Dfile->FD);
+    File_close(Dfile->FD);
 +   }
-    close(Dfile->FD_Write);
+    File_close(Dfile->FD_Write);
     File_dillofile_free(Dfile);
     return NULL;
 @@ -339,7 +364,7 @@
