@@ -5,3 +5,4 @@ Comment[pl]=illo - przegladarka web
 Exec=dilo
 Terminal=1
 Type=Application
+# vi: encoding=utf-8
