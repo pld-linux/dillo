@@ -2,6 +2,7 @@
 Name=Dillo
 Comment=Dillo - The GTK Web Browser
 Comment[pl]=dillo - przegladarka web
+Icon=dillo.png
 Exec=dillo
 Terminal=1
 Type=Application
