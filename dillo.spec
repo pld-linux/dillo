@@ -8,6 +8,10 @@ Group:		X11/Applications/Networking
 Group(de):	X11/Applikationen/Netzwerkwesen
 Group(pl):	X11/Aplikacje/Sieciowe
 Source0:	http://download.sourceforge.net/%{name}/%{name}-%{version}.tar.gz
+Source1:	%{name}.desktop
+URL:		http://dillo.sourceforge.net/
+BuildRequires:	autoconf
+BuildRequires:	automake
 BuildRequires:	libjpeg-devel
 BuildRequires:	gtk+-devel >= 1.2.0
 Buildrequires:	libpng-devel >= 1.0.9
@@ -26,13 +30,19 @@ sieci.
 %setup -q
 
 %build
+aclocal
+autoconf
+automake -a -c
 %configure
 %{__make}
 
 %install
 rm -rf $RPM_BUILD_ROOT
+install -d $RPM_BUILD_ROOT%{_applnkdir}/Network/WWW
 
 %{__make} install DESTDIR=$RPM_BUILD_ROOT
+
+install %{SOURCE1} $RPM_BUILD_ROOT%{_applnkdir}/Network/WWW
 
 gzip -9nf doc/{*.txt,README} AUTHORS ChangeLog
 
@@ -43,3 +53,4 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(644,root,root,755)
 %doc *.gz doc/*.gz
 %attr(755,root,root) %{_bindir}/dillo
+%{_applnkdir}/Network/WWW/*
