@@ -3,7 +3,7 @@ Summary:	DILLO - The GTK Web Browser
 Summary(pl):	DILLO - przegl±darka web
 Name:		dillo
 Version:	0.7.2
-Release:	0.1
+Release:	1
 License:	GPL
 Group:		X11/Applications/Networking
 Source0:	http://dillo.auriga.wearlab.de/download/%{name}-%{version}.tar.bz2
@@ -39,7 +39,8 @@ rm -f missing
 %{__autoconf}
 %{__automake}
 %configure \
-	--enable-cookies
+	--enable-cookies \
+	--enable-ipv6
 %{__make}
 
 %install
