@@ -30,7 +30,7 @@ Dillo jest ma³±, szybk±, bazuj±c± na bibliotece GTK+ przegl±dark±
 sieci.
 
 %prep
-%setup  -q 
+%setup  -q
 %patch0 -p1
 %patch1 -p1
 
