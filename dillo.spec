@@ -17,7 +17,7 @@ BuildRequires:	autoconf
 BuildRequires:	automake
 BuildRequires:	gtk+-devel >= 1.2.0
 BuildRequires:	libjpeg-devel
-Buildrequires:	libpng-devel >= 1.0.9
+BuildRequires:	libpng-devel >= 1.0.9
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %define		_sysconfdir	/etc/dillo
