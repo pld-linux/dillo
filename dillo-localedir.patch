@@ -1,0 +1,10 @@
+--- dillo-0.6.6/src/dillo.c.orig	Sat Jul  6 18:16:10 2002
++++ dillo-0.6.6/src/dillo.c	Sat Jul  6 18:38:47 2002
+@@ -95,6 +95,7 @@
+    g_print("Setting locale to %s\n",curr_locale);
+    
+    /* binding the textdomain for GNU gettext: should return "dillo" */
++   bindtextdomain("dillo", "/usr/X11R6/share/locale");
+    dillo_text_domain = textdomain("dillo");
+    if (strcmp(dillo_text_domain, "dillo") != 0) g_print("Translation error: will continue in english\n");
+    
