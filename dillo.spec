@@ -1,5 +1,5 @@
 # TODO gettext support
-Summary:	DILLO - The GTK Web Browser
+Summary:	DILLO - The GTK+ Web Browser
 Summary(pl):	DILLO - przegl±darka web
 Name:		dillo
 Version:	0.8.2
