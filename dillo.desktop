@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Dillo
 Comment=Dillo - The GTK Web Browser
-Comment[pl]=dillo - przegladarka web
+Comment[pl]=Dillo - przeglądarka WWW
 Icon=dillo.png
 Exec=dillo
 Terminal=1
