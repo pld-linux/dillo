@@ -1,5 +1,5 @@
 --- dillo-0.7.2/src/IO/file.c.orig	Sun May  4 12:33:54 2003
-+++ dillo-0.7.2/src/IO/file.c	Sun May  4 12:40:09 2003
++++ dillo-0.7.2/src/IO/file.c	Sun May  4 12:57:50 2003
 @@ -29,6 +29,7 @@
  #include <stdio.h>
  #include <signal.h>
@@ -8,7 +8,12 @@
  
  #include <errno.h>           /* for errno */
  #include "Url.h"
-@@ -66,7 +67,7 @@
+@@ -62,11 +63,12 @@
+    gint FD;         /* Our local-file descriptor */
+    char *FileName;
+    glong FileSize;
++   gint ContentEncoding; /* 0 normal, 1 gzipped */
+ 
     pthread_t th1;      /* This transfer's thread id. */
  } DilloFile;
  
@@ -17,8 +22,11 @@
  
  /*
   * Local data
-@@ -122,15 +123,27 @@
+@@ -120,17 +122,28 @@
+ {
+    gint fds[2], fd;
     struct stat sb;
++   gint ContentEncoding; /* 0 normal, 1 gzipped */
     DilloFile *Dfile;
  
 -   if ( (fd = open(filename, O_RDONLY)) < 0 || pipe(fds) )
@@ -36,12 +44,10 @@
 -   Dfile->FileSize = fstat(fd, &sb) ? -1 : (glong) sb.st_size;
 +   if (ContentEncoding == GZIP_ENCODING) {
 +      gchar *tmp_filename = g_strndup(filename, strlen(filename) - 3);
-+      Dfile->ContentType = File_content_type(tmp_filename);
 +      g_free(tmp_filename);
 +      Dfile->FileSize = -1;
 +   }
 +   else {
-+      Dfile->ContentType = File_content_type(filename);
 +      Dfile->FileSize = fstat(fd, &sb) ? -1 : (glong) sb.st_size;
 +   }
 +   Dfile->ContentEncoding = ContentEncoding;
