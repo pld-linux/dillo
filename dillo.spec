@@ -7,6 +7,7 @@ Release:	1
 License:	GPL
 Group:		X11/Applications/Networking
 Source0:	http://dillo.auriga.wearlab.de/download/%{name}-%{version}.tar.bz2
+# Source0-md5:	8072ff85bde54f9e421ddadd642d6722
 Source1:	%{name}.desktop
 Source2:	%{name}.png
 Patch0:		%{name}-gzip_fallback.patch
