@@ -67,7 +67,7 @@
  
  
 -   /* Append raw file contents */
--   while ( (nbytes = read(Dfile->FD, buf, 8192)) != 0 ) {
+-   while ( (nbytes = read(Dfile->FD, buf, LBUF)) != 0 ) {
 -      write(Dfile->FD_Write, buf, nbytes);
 +   /* decompress gzipped file */
 +   if (Dfile->ContentEncoding == GZIP_ENCODING) {
@@ -79,7 +79,7 @@
     }
 +   else {
 +   /* Append raw file contents */
-+      while ( (nbytes = read(Dfile->FD, buf, 8192)) != 0 ) {
++      while ( (nbytes = read(Dfile->FD, buf, LBUF)) != 0 ) {
 +         write(Dfile->FD_Write, buf, nbytes);
 +      }
 +

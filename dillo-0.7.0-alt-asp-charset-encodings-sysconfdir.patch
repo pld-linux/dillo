@@ -167,10 +167,10 @@ diff -Nur old/src/dw_style.c new/src/dw_style.c
  
  #include <gdk/gdk.h>
  #include <stdio.h>
-@@ -294,40 +295,37 @@
+@@ -300,40 +301,37 @@
        break;
     }
-    
+ 
 -   sprintf (fontname, "-*-%s-%s-%s-*-*-%d-*-75-75-*-*-iso8859-1",
 +   sprintf (fontname, "-*-%s-%s-%s-*-*-%d-*-75-75-*-*-%s",
              font->name,
