@@ -4,6 +4,6 @@ Comment=Dillo - The GTK Web Browser
 Comment[pl]=Dillo - przeglądarka WWW
 Icon=dillo.png
 Exec=dillo
-Terminal=1
+Terminal=0
 Type=Application
 # vi: encoding=utf-8
