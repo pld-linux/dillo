@@ -1,5 +1,6 @@
---- dillo-0.7.0~/dillorc	2003-02-13 23:59:30 +0300
-+++ dillo-0.7.0/dillorc	2003-02-21 03:15:45 +0300
+diff -Nur old/dillorc new/dillorc
+--- old/dillorc	2004-01-25 16:18:12.000000000 +0100
++++ new/dillorc	2004-03-07 17:42:28.000000000 +0100
 @@ -35,6 +35,9 @@
  # If you prefer oblique over italic fonts, uncoment next line
  #use_oblique=YES
@@ -10,8 +11,9 @@
  # Show tooltip popup for images?
  # Note: We use the "title" attribute and not "alt".
  #       More info at: http://bugzilla.mozilla.org/show_bug.cgi?id=25537
---- dillo-0.7.0~/encodings	1970-01-01 03:00:00 +0300
-+++ dillo-0.7.0/encodings	2003-02-21 03:15:46 +0300
+diff -Nur old/encodings new/encodings
+--- old/encodings	1970-01-01 01:00:00.000000000 +0100
++++ new/encodings	2004-03-07 17:32:50.000000000 +0100
 @@ -0,0 +1,18 @@
 +<enc value="ASCII">7-bit ASCII</enc>
 +<enc value="ISO8859-1">Western European (ISO 8859-1)</enc>
@@ -31,23 +33,23 @@
 +<enc value="KOI8-U">Ukraine (KOI8-U)</enc>
 +<enc value="UTF-8">Unicode (UTF-8)</enc>
 +<enc value="UTF-16">Unicode (UTF-16)</enc>
---- dillo-0.7.0~/src/browser.h	2003-02-10 16:10:30 +0300
-+++ dillo-0.7.0/src/browser.h	2003-02-21 03:15:46 +0300
-@@ -4,10 +4,8 @@
+diff -Nur old/src/browser.h new/src/browser.h
+--- old/src/browser.h	2004-02-03 20:03:28.000000000 +0100
++++ new/src/browser.h	2004-03-07 17:45:51.000000000 +0100
+@@ -4,9 +4,8 @@
  #include <sys/types.h>
  #include <gdk/gdk.h>
  #include <gtk/gtk.h>
 -
  #include "url.h"     /* for DilloUrl */
 -
--
 +#include "encodings-types.h"
+ 
  typedef struct _BrowserWindow BrowserWindow;
  typedef struct _DilloMenuPopup DilloMenuPopup;
- 
-@@ -61,6 +59,9 @@
-    /* The bookmarks menu so that we can add things to it. */
-    GtkWidget *bookmarks_menu;
+@@ -65,6 +64,9 @@
+    /* Popup menu for this BrowserWindow */
+    DilloMenuPopup menu_popup;
  
 +   /* The encoding menu */
 +   GtkWidget *enc_menu;
@@ -55,10 +57,10 @@
     /* The "Headings" and "Anchors" menus */
     GtkWidget *pagemarks_menuitem;
     GtkWidget *pagemarks_menu;
-@@ -121,6 +122,10 @@
+@@ -132,6 +134,10 @@
  
-    /* The tag for the idle function that sets button sensitivity. */
-    guint sens_idle_tag;
+    /* The id for the idle function that sets button sensitivity. */
+    guint sens_idle_id;
 +
 +   /* encodings variable */
 +   gchar*   encoding;     /* the selected character set (pointer to static content -don't free it*/
@@ -66,8 +68,9 @@
  };
  
  
---- dillo-0.7.0~/src/dillo.c	2003-02-09 03:22:14 +0300
-+++ dillo-0.7.0/src/dillo.c	2003-02-21 03:15:46 +0300
+diff -Nur old/src/dillo.c new/src/dillo.c
+--- old/src/dillo.c	2004-02-06 16:53:59.000000000 +0100
++++ new/src/dillo.c	2004-03-07 19:43:48.000000000 +0100
 @@ -22,6 +22,13 @@
  #include <stdio.h>
  #include <gtk/gtk.h>
@@ -82,7 +85,7 @@
  #include <sys/types.h>
  #include <sys/stat.h>
  #include <string.h>
-@@ -39,6 +46,7 @@
+@@ -41,6 +48,7 @@
  #include "nav.h"
  #include "history.h"
  #include "bookmark.h"
@@ -90,7 +93,7 @@
  #include "dicache.h"
  #include "dns.h"
  #include "IO/mime.h"
-@@ -194,7 +194,7 @@
+@@ -198,7 +206,7 @@
   */
  gint main(int argc, char *argv[])
  {
@@ -99,9 +102,9 @@
     DilloUrl *start_url;
     BrowserWindow *bw;
     guint32 xid = 0;
-@@ -181,9 +189,6 @@
-    gint i;
-    char **opt_argv = NULL;
+@@ -210,9 +218,6 @@
+    gint xpos = D_GEOMETRY_DEFAULT_XPOS, ypos = D_GEOMETRY_DEFAULT_YPOS;
+    gint width = D_GEOMETRY_DEFAULT_WIDTH, height = D_GEOMETRY_DEFAULT_HEIGHT;
  
 -   /* set locale */
 -   curr_locale = g_strdup(setlocale(LC_ALL, NULL));
@@ -109,12 +112,12 @@
     /* Initialize GUI and parse GTK related args */
     gtk_init(&argc, &argv);
     gdk_rgb_init();
-@@ -219,9 +224,21 @@
+@@ -254,9 +259,21 @@
       }
     }
  
 -   /* Send a delayed locale-related message */
--   g_print("Setting locale to %s...\n", curr_locale);
+-   MSG("Setting locale to %s...\n", curr_locale);
 -   g_free(curr_locale);
 +   curr_locale=gtk_set_locale();
 +#ifdef HAVE_LANGINFO
@@ -134,46 +137,55 @@
  
     /* This lets threads in the file module end peacefully when aborted
      * todo: implement a cleaner mechanism (in file.c) */
-@@ -255,6 +272,7 @@
-    bw = a_Interface_browser_window_new(prefs.width, prefs.height, xid);
+@@ -300,6 +317,7 @@
+       gtk_widget_set_uposition(bw->main_window, prefs.xpos, prefs.ypos);
  
     a_Bookmarks_init();
 +   a_Encodings_init();
  
     /* Send dillo startup screen */
-    start_url = a_Url_new("splash", "about:", 0, 0);
---- dillo-0.7.0~/src/dillo.h	2002-11-28 19:42:22 +0300
-+++ dillo-0.7.0/src/dillo.h	2003-02-21 03:15:46 +0300
-@@ -4,4 +4,5 @@
+    start_url = a_Url_new("splash", "about:", 0, 0, 0);
+diff -Nur old/src/dillo.h new/src/dillo.h
+--- old/src/dillo.h	2003-09-05 14:07:06.000000000 +0200
++++ new/src/dillo.h	2004-03-07 19:26:40.000000000 +0100
+@@ -4,6 +4,7 @@
  #include "browser.h"
  #include "web.h"
  
 +char* curr_locale;
- #endif /* __DILLO_H__ */
-diff -ubBdr -N dillo-0.7.0~/src/dillo.h.orig dillo-0.7.0/src/dillo.h.orig
---- dillo-0.7.0~/src/dw_style.c	2003-01-05 22:24:06 +0300
-+++ dillo-0.7.0/src/dw_style.c	2003-02-21 03:15:45 +0300
-@@ -245,42 +245,39 @@
-    char fontname[256], *ItalicChar;
+ extern gboolean dillo_dbg_rendering;
  
-    ItalicChar = prefs.use_oblique ? "o" : "i";
+ #endif /* __DILLO_H__ */
+diff -Nur old/src/dw_style.c new/src/dw_style.c
+--- old/src/dw_style.c	2003-11-15 22:57:53.000000000 +0100
++++ new/src/dw_style.c	2004-03-07 19:34:53.000000000 +0100
+@@ -11,6 +11,7 @@
+ 
+ #include "dw_style.h"
+ #include "dw_widget.h"
++#include "prefs.h"
+ 
+ #include <gdk/gdk.h>
+ #include <stdio.h>
+@@ -294,40 +295,37 @@
+       break;
+    }
+    
 -   sprintf (fontname, "-*-%s-%s-%s-*-*-%d-*-75-75-*-*-iso8859-1",
 +   sprintf (fontname, "-*-%s-%s-%s-*-*-%d-*-75-75-*-*-%s",
              font->name,
-             font->bold ? "bold" : "medium",
-             font->italic ? ItalicChar : "r",
--            font->size);
-+            font->size,prefs.font_charset);
+             (font->weight >= 500) ? "bold" : "medium",
+-            style_char_1, font->size);
++            style_char_1, font->size, prefs.font_charset);
     font->font = gdk_font_load (fontname);
  
-    if (font->font == NULL && font->italic) {
+    if (font->font == NULL && font->style != DW_STYLE_FONT_STYLE_NORMAL) {
 -      sprintf (fontname, "-*-%s-%s-%s-*-*-%d-*-75-75-*-*-iso8859-1",
 +      sprintf (fontname, "-*-%s-%s-%s-*-*-%d-*-75-75-*-*-%s",
                 font->name,
-                font->bold ? "bold" : "medium",
-                (*ItalicChar == 'o') ? "i" : "o",
--               font->size);
-+               font->size,prefs.font_charset);
+                (font->weight >= 500) ? "bold" : "medium",
+-               style_char_2, font->size);
++               style_char_2, font->size, prefs.font_charset);
        font->font = gdk_font_load (fontname);
     }
  
@@ -183,7 +195,7 @@ diff -ubBdr -N dillo-0.7.0~/src/dillo.h.orig dillo-0.7.0/src/dillo.h.orig
 -         font->font =
 -            gdk_font_load
 -            ("-adobe-helvetica-medium-r-normal--*-100-*-*-*-*-iso8859-1");
-+         sprintf(fontname,"-adobe-helvetica-medium-r-normal--*-100-*-*-*-*-%s",prefs.font_charset);
++         sprintf(fontname,"-adobe-helvetica-medium-r-normal--*-100-*-*-*-*-%s", prefs.font_charset);
 +         font->font = gdk_font_load (fontname);
        }
  
@@ -192,7 +204,7 @@ diff -ubBdr -N dillo-0.7.0~/src/dillo.h.orig dillo-0.7.0/src/dillo.h.orig
 -         font->font =
 -            gdk_font_load
 -            ("-misc-fixed-medium-r-normal--13-120-75-75-c-80-iso8859-1");
-+         sprintf(fontname,"-misc-fixed-medium-r-normal--13-120-75-75-c-80-%s",prefs.font_charset);
++         sprintf(fontname,"-misc-fixed-medium-r-normal--13-120-75-75-c-80-%s", prefs.font_charset);
 +         font->font = gdk_font_load (fontname);
        }
  
@@ -206,8 +218,9 @@ diff -ubBdr -N dillo-0.7.0~/src/dillo.h.orig dillo-0.7.0/src/dillo.h.orig
        }
     }
  
---- dillo-0.7.0~/src/encodings.c	1970-01-01 03:00:00 +0300
-+++ dillo-0.7.0/src/encodings.c	2003-02-21 03:15:46 +0300
+diff -Nur old/src/encodings.c new/src/encodings.c
+--- old/src/encodings.c	1970-01-01 01:00:00.000000000 +0100
++++ new/src/encodings.c	2004-03-07 17:32:50.000000000 +0100
 @@ -0,0 +1,383 @@
 +/* cruelty :) */
 +
@@ -592,8 +605,9 @@ diff -ubBdr -N dillo-0.7.0~/src/dillo.h.orig dillo-0.7.0/src/dillo.h.orig
 +    *dest = 0; /* terminate the string */
 +    return result;
 +}
---- dillo-0.7.0~/src/encodings.h	1970-01-01 03:00:00 +0300
-+++ dillo-0.7.0/src/encodings.h	2003-02-21 03:15:46 +0300
+diff -Nur old/src/encodings.h new/src/encodings.h
+--- old/src/encodings.h	1970-01-01 01:00:00.000000000 +0100
++++ new/src/encodings.h	2004-03-07 17:32:50.000000000 +0100
 @@ -0,0 +1,18 @@
 +#ifndef __DILLO_ENCODING_H__
 +#define __DILLO_ENCODING_H__
@@ -613,9 +627,9 @@ diff -ubBdr -N dillo-0.7.0~/src/dillo.h.orig dillo-0.7.0/src/dillo.h.orig
 +				     gint bufsize,deDirection dir);
 +
 +#endif /* __DILLO_ENCODING_H__ */
-diff -ubBdr -N dillo-0.7.0~/src/encodings-types.h dillo-0.7.0/src/encodings-types.h
---- dillo-0.7.0~/src/encodings-types.h	1970-01-01 03:00:00 +0300
-+++ dillo-0.7.0/src/encodings-types.h	2003-02-21 03:15:46 +0300
+diff -Nur old/src/encodings-types.h new/src/encodings-types.h
+--- old/src/encodings-types.h	1970-01-01 01:00:00.000000000 +0100
++++ new/src/encodings-types.h	2004-03-07 17:32:50.000000000 +0100
 @@ -0,0 +1,19 @@
 +#ifndef __DILLO_ENCODING_TYPES_H__
 +#define __DILLO_ENCODING_TYPES_H__
@@ -636,18 +650,18 @@ diff -ubBdr -N dillo-0.7.0~/src/encodings-types.h dillo-0.7.0/src/encodings-type
 +} deDirection;
 +
 +#endif /*  __DILLO_ENCODING_TYPES_H__ */
-diff -ubBdr -N dillo-0.7.0~/src/html.c dillo-0.7.0/src/html.c
---- dillo-0.7.0~/src/html.c	2003-02-14 00:01:02 +0300
-+++ dillo-0.7.0/src/html.c	2003-02-21 03:15:46 +0300
+diff -Nur old/src/html.c new/src/html.c
+--- old/src/html.c	2004-02-07 00:10:45.000000000 +0100
++++ new/src/html.c	2004-03-07 18:21:23.000000000 +0100
 @@ -21,6 +21,7 @@
  #include <stdlib.h>
  #include <stdio.h>      /* for sprintf */
  #include <math.h>      /* for rint */
-+#include <errno.h>      /* for iconv error codes */
++#include <errno.h>	/* for iconv error codes */
  
  #include <gtk/gtk.h>
  
-@@ -48,6 +49,7 @@
+@@ -51,6 +52,7 @@
  #include "progressbar.h"
  #include "prefs.h"
  #include "misc.h"
@@ -655,7 +669,7 @@ diff -ubBdr -N dillo-0.7.0~/src/html.c dillo-0.7.0/src/html.c
  #include "capi.h"
  #include "html.h"
  
-@@ -2847,7 +2849,7 @@
+@@ -3140,7 +3142,7 @@
     if ((form->method == DILLO_HTML_METHOD_GET) ||
         (form->method == DILLO_HTML_METHOD_POST)) {
        GString *DataStr = g_string_sized_new(4096);
@@ -664,20 +678,20 @@ diff -ubBdr -N dillo-0.7.0~/src/html.c dillo-0.7.0/src/html.c
        DEBUG_MSG(3,"Html_submit_form form->action=%s\n",URL_STR_(form->action));
  
        for (input_index = 0; input_index < form->num_inputs; input_index++) {
-@@ -2911,6 +2913,12 @@
+@@ -3204,6 +3206,12 @@
              break;
           } /* switch */
        } /* for (inputs) */
 +      DataStrEnc = g_string_new(a_Encoding_translate_encoding(html_lb->bw->dcv,
-+								 DataStr -> str,
-+								 DataStr -> len,
-+								 DE_ENCODE));
++                                                                DataStr -> str,
++                                                                DataStr -> len,
++                                                                DE_ENCODE));
 +      g_string_free(DataStr,TRUE);
 +      DataStr = DataStrEnc;
  
        if ( DataStr->str[DataStr->len - 1] == '&' )
           g_string_truncate(DataStr, DataStr->len - 1);
-@@ -3992,6 +4000,22 @@
+@@ -4374,6 +4382,22 @@
        Html_write(Client->CbData, Client->Buf, Client->BufSize, 0);
  }
  
@@ -689,10 +703,10 @@ diff -ubBdr -N dillo-0.7.0~/src/html.c dillo-0.7.0/src/html.c
 +}
 +
 +static char *Html_translate_encoding(DilloHtml *html, char *buf,
-+				    gint bufsize) {
++                                   gint bufsize) {
 +    char* result=a_Encoding_translate_encoding(html->bw->dcv,
-+					       buf, bufsize,
-+					       DE_DECODE);
++                                              buf, bufsize,
++                                              DE_DECODE);
 +    return result;
 +
 +}
@@ -700,29 +714,23 @@ diff -ubBdr -N dillo-0.7.0~/src/html.c dillo-0.7.0/src/html.c
  /*
   * Here's where we parse the html and put it into the page structure.
   * Return value: number of bytes parsed
-@@ -4147,7 +4147,11 @@
+@@ -4511,8 +4535,12 @@
  
     g_return_if_fail ( (page = DW_PAGE (html->dw)) != NULL );
  
 +   Html_set_encoding(html, buf, bufsize);
 +   buf = Html_translate_encoding(html, buf, bufsize);
 +
+    html->Start_Buf = Buf;
     token_start = Html_write_raw(html, buf, bufsize, Eof);
 +   g_free(buf);
     html->Start_Ofs += token_start;
  
     if ( html->bw ) {
---- dillo-0.7.0~/src/interface.c	2003-02-11 04:09:59 +0300
-+++ dillo-0.7.0/src/interface.c	2003-02-21 03:15:46 +0300
-@@ -19,6 +19,7 @@
- #include <sys/stat.h>
- #include <sys/time.h>
- #include <fcntl.h>
-+#include <iconv.h>
- 
- #include "list.h"
- #include "misc.h"
-@@ -54,7 +55,7 @@
+diff -Nur old/src/interface.c new/src/interface.c
+--- old/src/interface.c	2004-02-03 20:10:42.000000000 +0100
++++ new/src/interface.c	2004-03-07 18:22:51.000000000 +0100
+@@ -55,7 +55,7 @@
   */
  /* BrowserWindow holds all the widgets (and perhaps more)
   * for each new_browser.*/
@@ -730,39 +738,52 @@ diff -ubBdr -N dillo-0.7.0~/src/html.c dillo-0.7.0/src/html.c
 +BrowserWindow **browser_window;
  static gint num_bw, num_bw_max;
  
- 
-@@ -822,6 +823,9 @@
+ /* We need only one of them. */
+@@ -969,6 +969,9 @@
     bw->question_dialog_window = NULL;
     bw->question_dialog_data = NULL;
     bw->viewsource_window = NULL;
 +   bw->encoding=NULL;
 +   bw->dcv.c_from  = (iconv_t)-1; /* no conversion yet */
 +   bw->dcv.c_to  = (iconv_t)-1;
+    bw->pagebugs_window = NULL;
  
     /* now that the bw is made, let's customize it.. */
-    Interface_browser_window_customize(bw);
-diff -ubBdr -N dillo-0.7.0~/src/Makefile.am.orig dillo-0.7.0/src/Makefile.am.orig
---- dillo-0.7.0~/src/menu.c	2003-02-11 00:30:13 +0300
-+++ dillo-0.7.0/src/menu.c	2003-02-21 03:15:46 +0300
+diff -Nur old/src/Makefile.am new/src/Makefile.am
+--- old/src/Makefile.am	2004-01-29 21:34:05.000000000 +0100
++++ new/src/Makefile.am	2004-03-07 18:32:22.000000000 +0100
+@@ -63,6 +63,9 @@
+ 	dw_tooltip.h \
+ 	dw_widget.c \
+ 	dw_widget.h \
++        encodings.c \
++        encodings.h \
++        encoding-types.h \
+ 	findtext.c \
+ 	findtext.h \
+ 	selection.c \
+diff -Nur old/src/menu.c new/src/menu.c
+--- old/src/menu.c	2004-02-03 20:03:11.000000000 +0100
++++ new/src/menu.c	2004-03-07 18:26:30.000000000 +0100
 @@ -33,6 +33,7 @@
  #include "bookmark.h"
  #include "interface.h"
  #include "menu.h"
 +#include "encodings.h"
+ #include "selection.h"
  
  /*
-  * Forward declarations
-@@ -124,6 +125,7 @@
+@@ -141,6 +142,7 @@
+    GtkWidget *menubar;
     GtkWidget *file_menu;
-    /* GtkWidget *bookmarks_menu; */
     /* GtkWidget *help_menu; */
 +   GtkWidget *enc_menu;
  
     bw->menubar = menubar = gtk_menu_bar_new();
  
-@@ -160,6 +162,10 @@
-    Menu_add(help_menu, "Dillo _Manual", NULL, bw,
-             a_Commands_manual_callback, bw);
+@@ -167,6 +169,10 @@
+    Menu_add(help_menu, "Dillo _Home", NULL, bw,
+             a_Commands_helphome_callback, bw);
     */
 +   enc_menu = Menu_new(menubar, tiny ? "_E" : "_Encodings", FALSE, bw);
 +   bw->enc_menu = enc_menu;
@@ -771,9 +792,10 @@ diff -ubBdr -N dillo-0.7.0~/src/Makefile.am.orig dillo-0.7.0/src/Makefile.am.ori
     return menubar;
  }
  
---- dillo-0.7.0~/src/prefs.c	2003-02-11 00:40:13 +0300
-+++ dillo-0.7.0/src/prefs.c	2003-02-21 03:15:46 +0300
-@@ -51,6 +51,7 @@
+diff -Nur old/src/prefs.c new/src/prefs.c
+--- old/src/prefs.c	2004-01-25 16:17:53.000000000 +0100
++++ new/src/prefs.c	2004-03-07 18:30:13.000000000 +0100
+@@ -52,6 +52,7 @@
     { "small_icons", DRC_TOKEN_SMALL_ICONS },
     { "limit_text_width", DRC_TOKEN_LIMIT_TEXT_WIDTH },
     { "font_factor", DRC_TOKEN_FONT_FACTOR },
@@ -781,7 +803,7 @@ diff -ubBdr -N dillo-0.7.0~/src/Makefile.am.orig dillo-0.7.0/src/Makefile.am.ori
     { "use_dicache", DRC_TOKEN_USE_DICACHE },
     { "show_back", DRC_TOKEN_SHOW_BACK },
     { "show_forw", DRC_TOKEN_SHOW_FORW },
-@@ -173,6 +174,10 @@
+@@ -172,6 +173,10 @@
     case DRC_TOKEN_FONT_FACTOR:
        prefs.font_factor = strtod(scanner->value.v_string, NULL);
        break;
@@ -792,7 +814,7 @@ diff -ubBdr -N dillo-0.7.0~/src/Makefile.am.orig dillo-0.7.0/src/Makefile.am.ori
     case DRC_TOKEN_LIMIT_TEXT_WIDTH:
        prefs.limit_text_width = (strcmp(scanner->value.v_string, "YES") == 0);
        break;
-@@ -347,6 +352,7 @@
+@@ -363,6 +368,7 @@
     prefs.small_icons = FALSE;
     prefs.limit_text_width = FALSE;
     prefs.font_factor = 1.0;
@@ -800,7 +822,7 @@ diff -ubBdr -N dillo-0.7.0~/src/Makefile.am.orig dillo-0.7.0/src/Makefile.am.ori
     prefs.use_dicache = FALSE;
     prefs.show_back=TRUE;
     prefs.show_forw=TRUE;
-@@ -385,6 +391,8 @@
+@@ -405,6 +411,8 @@
     g_free(prefs.no_proxy);
     if (prefs.no_proxy_vec)
        g_strfreev(prefs.no_proxy_vec);
@@ -809,9 +831,10 @@ diff -ubBdr -N dillo-0.7.0~/src/Makefile.am.orig dillo-0.7.0/src/Makefile.am.ori
     a_Url_free(prefs.http_proxy);
     g_free(prefs.fw_fontname);
     g_free(prefs.vw_fontname);
---- dillo-0.7.0~/src/prefs.h	2003-02-11 00:42:09 +0300
-+++ dillo-0.7.0/src/prefs.h	2003-02-21 03:15:45 +0300
-@@ -41,6 +41,7 @@
+diff -Nur old/src/prefs.h new/src/prefs.h
+--- old/src/prefs.h	2004-01-25 16:17:37.000000000 +0100
++++ new/src/prefs.h	2004-03-07 18:31:25.000000000 +0100
+@@ -43,6 +43,7 @@
     DRC_TOKEN_PANEL_SIZE,
     DRC_TOKEN_SMALL_ICONS,
     DRC_TOKEN_FONT_FACTOR,
@@ -819,7 +842,7 @@ diff -ubBdr -N dillo-0.7.0~/src/Makefile.am.orig dillo-0.7.0/src/Makefile.am.ori
     DRC_TOKEN_SHOW_TOOLTIP,
     DRC_TOKEN_LIMIT_TEXT_WIDTH,
     DRC_TOKEN_USE_DICACHE,
-@@ -87,6 +88,7 @@
+@@ -95,6 +96,7 @@
     gboolean small_icons;
     gboolean limit_text_width;
     gdouble font_factor;
@@ -827,15 +850,3 @@ diff -ubBdr -N dillo-0.7.0~/src/Makefile.am.orig dillo-0.7.0/src/Makefile.am.ori
     gboolean use_dicache;
     gboolean show_back;
     gboolean show_forw;
---- dillo-0.7.2/src/Makefile.am.orig	Sun May  4 14:08:25 2003
-+++ dillo-0.7.2/src/Makefile.am	Sun May  4 14:11:41 2003
-@@ -59,6 +59,9 @@
- 	dw_tooltip.h \
- 	dw_widget.c \
- 	dw_widget.h \
-+	encodings.c \
-+	encodings.h \
-+	encoding-types.h \
- 	findtext.c \
- 	findtext.h \
- 	selection.c \
