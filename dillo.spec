@@ -23,11 +23,15 @@ BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 %define		_sysconfdir	/etc/dillo
 
 %description
-Dillo is small, fast, based on GTK+ library web browser written in C.
+Dillo is a small GTK+ based (GNOME is NOT required!) web browser.
+Dillo aims to be a multi-platform browser alternative that's small, 
+stable, developer-friendly, usable, fast, and extensible.
 
 %description -l pl
-Dillo jest ma³±, szybk±, bazuj±c± na bibliotece GTK+ przegl±dark±
-sieci.
+Dillo jest ma³±, bazuj±c± na bibliotece GTK+ (GNOME nie jest wymagany)
+przegl±dark± sieci. Dillo ma byæ wieloplatformow± alternatywn±
+przegl±dark±, która jest ma³a, stabilna, przyjazna dla developerów,
+u¿yteczna, szybka i rozszerzalna.
 
 %prep
 %setup  -q
