@@ -21,7 +21,6 @@ BuildRequires:	libjpeg-devel
 Buildrequires:	libpng-devel >= 1.0.9
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
-%define		_prefix		/usr/X11R6
 
 %description
 Dillo is small, fast, based on GTK+ library web browser written in C.
