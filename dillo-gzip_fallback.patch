@@ -1,117 +1,186 @@
---- dillo-0.7.2/src/IO/file.c.orig	Sun May  4 12:33:54 2003
-+++ dillo-0.7.2/src/IO/file.c	Sun May  4 12:57:50 2003
-@@ -29,6 +29,7 @@
- #include <stdio.h>
+--- dillo-0.8.3/dpi/file.c.orig	2004-10-13 22:04:00.000000000 +0200
++++ dillo-0.8.3/dpi/file.c	2004-11-03 23:33:03.451400688 +0100
+@@ -14,7 +14,7 @@
+  * Directory entries on top, files next.
+  * With new HTML layout.
+  */
+-
++#define _GNU_SOURCE
+ #include <ctype.h>           /* for tolower */
+ #include <unistd.h>
+ #include <stdlib.h>
+@@ -30,6 +30,7 @@
  #include <signal.h>
- #include <math.h>            /* for rint */
+ #include <errno.h>           /* for errno */
+ #include <glib.h>
 +#include <zlib.h>
  
- #include <errno.h>           /* for errno */
- #include "Url.h"
-@@ -62,11 +63,12 @@
-    gint FD;         /* Our local-file descriptor */
-    char *FileName;
-    glong FileSize;
-+   gint ContentEncoding; /* 0 normal, 1 gzipped */
+ #include "dpiutil.h"
  
-    pthread_t th1;      /* This transfer's thread id. */
- } DilloFile;
+@@ -61,7 +62,7 @@
+ /*
+  * Forward references
+  */
+-static const char *File_content_type(const char *filename);
++static const char *File_content_type(const char *filename, int *gzipped);
+ static gint File_get_file(const gchar *filename,
+                           struct stat *sb,
+                           const char *orig_url);
+@@ -384,7 +385,7 @@
+       cont = "application/executable";
+       filecont = "Executable";
+    } else {
+-      filecont = cont = File_content_type(finfo->full_path);
++      filecont = cont = File_content_type(finfo->full_path, NULL);
+       if (!filecont || !strcmp(filecont, "application/octet-stream"))
+          filecont = "unknown";
+    }
+@@ -507,13 +508,24 @@
+ /*
+  * Return a content type based on the extension of the filename.
+  */
+-static const char *File_ext(const char *filename)
++static const char *File_ext(const char *filename, int *gzipped)
+ {
+-   char *e;
++   char *e, *e2;
  
--
-+#define GZIP_ENCODING 1
+    if ( !(e = strrchr(filename, '.')) )
+       return NULL;
+ 
++   if ((e > filename) && !strcasecmp(e+1, "gz") &&
++       ((e2 = memrchr(filename, '.', e-filename)) != NULL)) {
++	   e2++;
++	   if (!strncasecmp(e2, "html.", 5) ||
++	       !strncasecmp(e2, "htm.", 4) ||
++	       !strncasecmp(e2, "shtml.", 6)) {
++		   if(gzipped != NULL)
++			*gzipped = 1;
++		   return "text/html";
++	   }
++   }
+    e++;
+ 
+    if (!strcasecmp(e, "gif")) {
+@@ -536,12 +548,12 @@
+  * Based on the extension, return the content_type for the file.
+  * (if there's no extension, analyze the data and try to figure it out)
+  */
+-static const char *File_content_type(const char *filename)
++static const char *File_content_type(const char *filename, int *gzipped)
+ {
+    gint fd;
+    const gchar *ct;
+ 
+-   if (!(ct = File_ext(filename))) {
++   if (!(ct = File_ext(filename, gzipped))) {
+       /* everything failed, let's analyze the data... */
+       if ((fd = open(filename, O_RDONLY | O_NONBLOCK)) != -1) {
+          gchar buf[256];
+@@ -563,16 +575,29 @@
+ {
+    int res;
+    struct stat sb;
++   char *tmp_filename = (char*)filename, *p;
+ 
+    if (stat(filename, &sb) != 0) {
++      char *e = strrchr(filename, '.');
++      if ((e == NULL) || strcasecmp(e + 1, "gz")) {
++	 if ((p = malloc(strlen(filename) + 4)) != NULL) {
++	    tmp_filename = p;
++	    strcpy(tmp_filename, filename);
++	    strcat(tmp_filename, ".gz");
++	    filename = tmp_filename;
++	 }
++      }
++   }
++
++   if (stat(tmp_filename, &sb) != 0) {
+       /* stat failed, prepare a file-not-found error. */
+       res = FILE_NOT_FOUND;
+    } else if (S_ISDIR(sb.st_mode)) {
+       /* set up for reading directory */
+-      res = File_get_dir(filename, orig_url);
++      res = File_get_dir(tmp_filename, orig_url);
+    } else {
+       /* set up for reading a file */
+-      res = File_get_file(filename, &sb, orig_url);
++      res = File_get_file(tmp_filename, &sb, orig_url);
+    }
+ 
+    if (res == FILE_NOT_FOUND) {
+@@ -583,8 +608,10 @@
+       sock_handler_printf(sh, 1,
+          "<dpi cmd='send_status_message' msg='"
+          "Failed to open the %s %s'>",
+-         S_ISDIR(sb.st_mode) ? "directory" : "file", filename);
++         S_ISDIR(sb.st_mode) ? "directory" : "file", tmp_filename);
+    }
++   if(tmp_filename != filename)
++      free(tmp_filename);
+ }
  
  /*
-  * Local data
-@@ -120,17 +122,28 @@
- {
-    gint fds[2], fd;
-    struct stat sb;
-+   gint ContentEncoding; /* 0 normal, 1 gzipped */
-    DilloFile *Dfile;
- 
--   if ( (fd = open(filename, O_RDONLY)) < 0 || pipe(fds) )
-+   if ( (fd = open(filename, O_RDONLY)) < 0 || pipe(fds) ) {
-       return NULL;
--
-+   }
-+   if (strncmp(strrchr(filename, '.'), ".gz", 3) == 0)
-+	   ContentEncoding = GZIP_ENCODING;
-    Dfile = g_new(DilloFile, 1);
-    Dfile->FD_Read  = fds[0];
-    Dfile->FD_Write = fds[1];
-    Dfile->FD = fd;
-    Dfile->FileName = g_strdup(filename);
--   Dfile->FileSize = fstat(fd, &sb) ? -1 : (glong) sb.st_size;
-+   if (ContentEncoding == GZIP_ENCODING) {
-+      gchar *tmp_filename = g_strndup(filename, strlen(filename) - 3);
-+      g_free(tmp_filename);
-+      Dfile->FileSize = -1;
-+   }
-+   else {
-+      Dfile->FileSize = fstat(fd, &sb) ? -1 : (glong) sb.st_size;
-+   }
-+   Dfile->ContentEncoding = ContentEncoding;
- 
-    return Dfile;
- }
-@@ -194,6 +207,7 @@
-    DilloFile *Dfile = data;
-    ssize_t nbytes;
+@@ -623,6 +650,8 @@
     const gchar *ct;
+    char buf[LBUF];
+    gint fd, st;
++   int gzipped = 0;
 +   gzFile gzdata;
  
-    /* Set this thread to detached state */
-    pthread_detach(Dfile->th1);
-@@ -221,12 +235,23 @@
-    write(Dfile->FD_Write, buf, strlen(buf));
+    if ( (fd = open(filename, O_RDONLY | O_NONBLOCK)) < 0)
+       return FILE_NO_ACCESS;
+@@ -632,15 +661,32 @@
+     * todo: a better approach could be to detect&reject those types we know
+     * for sure we don't handle (as gzip, bzip, ELF, etc)
+     */
+-   ct = File_content_type(filename);
++   ct = File_content_type(filename, &gzipped);
+    if (!ct || !strcmp(ct, "application/octet-stream"))
+       ct = "text/plain";
  
- 
--   /* Append raw file contents */
--   while ( (nbytes = read(Dfile->FD, buf, LBUF)) != 0 ) {
--      write(Dfile->FD_Write, buf, nbytes);
-+   /* decompress gzipped file */
-+   if (Dfile->ContentEncoding == GZIP_ENCODING) {
-+      gzdata = gzdopen(Dfile->FD, "r");
-+      while ((nbytes = gzread(gzdata, buf, 8192)) != 0 ) {
-+         write(Dfile->FD_Write, buf, nbytes);
-+      }
-+      gzclose(gzdata);
-    }
-+   else {
-+   /* Append raw file contents */
-+      while ( (nbytes = read(Dfile->FD, buf, LBUF)) != 0 ) {
-+         write(Dfile->FD_Write, buf, nbytes);
-+      }
-+
- 
-    File_close(Dfile->FD);
-+   }
-    File_close(Dfile->FD_Write);
-    File_dillofile_free(Dfile);
-    return NULL;
-@@ -339,7 +364,7 @@
- static void File_get(ChainLink *Info, void *Data1, void *Data2)
- {
-    const gchar *path;
--   gchar *filename;
-+   gchar *filename, *tmp_filename;
-    gint fd;
-    struct stat sb;
-    const DilloUrl *Url = Data1;
-@@ -353,8 +378,15 @@
-       filename = g_strdup(g_get_home_dir());
-    else
-       filename = a_Url_parse_hex_path(Url);
 -
-+stat_point:
-    if ( stat(filename, &sb) != 0 ) {
-+      char *ext = strrchr(filename, '.');
-+      if (ext && strcmp(ext, ".gz") != 0) {
-+         tmp_filename = filename;
-+         filename = g_strconcat(tmp_filename, ".gz", NULL);
-+         g_free(tmp_filename);
-+         goto stat_point;
-+      }
-       /* stat failed, prepare a file-not-found error. */
-       fd = -2;
-    } else if (S_ISDIR(sb.st_mode)) {
+    /* Send DPI command */
+    sock_handler_printf(sh, 1,
+       "<dpi cmd='start_send_page' url='%s'>\n", orig_url);
+ 
++   if (gzipped) {
++	/* Send HTTP stream */
++	sock_handler_printf(sh, 0,
++	   "Content-Type: %s\n\n", ct);
++
++	gzdata = gzdopen(fd, "r");
++	do {
++	    if ((st = gzread(gzdata, buf, LBUF)) > 0) {
++		if (sock_handler_write(sh, buf, st, 0) != 0)
++		    break;
++	    } else if (st < 0) {
++		perror("[read]");
++		if (errno == EINTR || errno == EAGAIN)
++		    continue;
++	    }
++	} while (st > 0);
++	gzclose(gzdata);
++   } else {
+    /* Send HTTP stream */
+    sock_handler_printf(sh, 0,
+       "Content-Type: %s\n"
+@@ -658,6 +704,7 @@
+             continue;
+       }
+    } while (st > 0);
++   }
+ 
+    /* todo: It may be better to send an error report to dillo instead of
+     * calling abort from g_error() */
+--- dillo-0.8.3/dpi/Makefile.am.orig	2004-10-08 17:40:43.000000000 +0200
++++ dillo-0.8.3/dpi/Makefile.am	2004-11-03 23:47:40.904007616 +0100
+@@ -18,7 +18,7 @@
+ ftp_filter_dpi_LDADD = @GLIB_LIBS@
+ https_filter_dpi_LDADD = @GLIB_LIBS@ @LIBSSL_LIBS@
+ hello_filter_dpi_LDADD = @GLIB_LIBS@
+-file_dpi_LDADD = @GLIB_LIBS@
++file_dpi_LDADD = @GLIB_LIBS@ -lz
+ 
+ bookmarks_dpi_SOURCES = bookmarks.c dpiutil.c dpiutil.h
+ downloads_dpi_SOURCES = downloads.c dpiutil.c dpiutil.h
