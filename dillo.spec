@@ -6,7 +6,7 @@ Release:	1
 Copyright:	GPL
 Group:		X11/Application/Networking	
 Group(pl):	X11/Aplikacje/Sieciowe
-Source0:	http://download.sourceforge.net/%{name}/%{name]-%{version}.tag.gz
+Source0:	http://download.sourceforge.net/%{name}/%{name}-%{version}.tag.gz
 #BuildRequires:	
 #Requires:	
 Buildroot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
