@@ -1,7 +1,7 @@
 Summary:	DILLO - The GTK Web Browser
 Summary(pl):	DILLO - przegl±darka web
 Name:		dillo
-Version:	0.6.5
+Version:	0.6.6
 Release:	1
 License:	GPL
 Group:		X11/Applications/Networking
@@ -48,14 +48,12 @@ install -d $RPM_BUILD_ROOT{%{_applnkdir}/Network/WWW,%{_pixmapsdir}}
 install %{SOURCE1} $RPM_BUILD_ROOT%{_applnkdir}/Network/WWW
 install %{SOURCE2} $RPM_BUILD_ROOT%{_pixmapsdir}
 
-gzip -9nf doc/{*.txt,README} AUTHORS ChangeLog dillorc
-
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
-%doc *.gz doc/*.gz
+%doc AUTHORS ChangeLog dillorc doc/{*.txt,README}
 %attr(755,root,root) %{_bindir}/dillo
 %{_applnkdir}/Network/WWW/*
 %{_pixmapsdir}/*
