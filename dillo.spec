@@ -1,7 +1,7 @@
 Summary:	DILLO - The GTK Web Browser
-Summary(pl):	DILLO - przegladarka web
+Summary(pl):	DILLO - przegl±darka web
 Name:		dillo
-Version:	0.5.1
+Version:	0.6.0
 Release:	1
 License:	GPL
 Group:		X11/Applications/Networking
@@ -23,7 +23,7 @@ BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 Dillo is small, fast, based on GTK+ library web browser written in C.
 
 %description -l pl
-Dillo jest mala, szybka, bazujaca na bibliotece GTK+ przegladarka
+Dillo jest ma³±, szybk±, bazuj±c± na bibliotece GTK+ przegl±dark±
 sieci.
 
 %prep
