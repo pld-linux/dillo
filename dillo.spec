@@ -2,13 +2,14 @@ Summary:	DILLO - The GTK Web Browser
 Summary(pl):	DILLO - przegl±darka web
 Name:		dillo
 Version:	0.6.6
-Release:	2
+Release:	3
 License:	GPL
 Group:		X11/Applications/Networking
 Source0:	http://dillo.cipsga.org.br/download/%{name}-%{version}.tar.gz
 Source1:	%{name}.desktop
 Source2:	%{name}.png
-Patch0:  %{name}-gzip_fallback.patch
+Patch0:		%{name}-gzip_fallback.patch
+Patch1:		http://matzar.republika.pl/stuff/%{name}-gettext.patch.gz
 URL:		http://dillo.cipsga.org.br/
 BuildRequires:	autoconf
 BuildRequires:	automake
@@ -29,6 +30,7 @@ sieci.
 %prep
 %setup -q
 %patch0 -p1
+%patch1 -p1
 
 %build
 rm -f missing
