@@ -1,6 +1,6 @@
 # TODO gettext support
 Summary:	DILLO - The GTK+ Web Browser
-Summary(pl):	DILLO - przegl±darka web
+Summary(pl):	DILLO - przegl±darka WWW
 Name:		dillo
 Version:	0.8.2
 Release:	1
@@ -28,8 +28,8 @@ Dillo aims to be a multi-platform browser alternative that's small,
 stable, developer-friendly, usable, fast, and extensible.
 
 %description -l pl
-Dillo jest ma³±, bazuj±c± na bibliotece GTK+ (GNOME nie jest wymagany)
-przegl±dark± sieci. Dillo ma byæ wieloplatformow± alternatywn±
+Dillo jest ma³±, opart± na bibliotece GTK+ (GNOME nie jest wymagany)
+przegl±dark± WWW. Dillo ma byæ wieloplatformow± alternatywn±
 przegl±dark±, która jest ma³a, stabilna, przyjazna dla developerów,
 u¿yteczna, szybka i rozszerzalna.
 
@@ -39,7 +39,6 @@ u¿yteczna, szybka i rozszerzalna.
 %patch1 -p1
 
 %build
-rm -f missing
 %{__aclocal}
 %{__autoconf}
 %{__automake}
