@@ -1,19 +1,21 @@
+# TODO gettext support
 Summary:	DILLO - The GTK Web Browser
 Summary(pl):	DILLO - przegl±darka web
 Name:		dillo
-Version:	0.6.6
-Release:	5
+Version:	0.7.0
+Release:	0.5
 License:	GPL
 Group:		X11/Applications/Networking
-Source0:	http://dillo.cipsga.org.br/download/%{name}-%{version}.tar.gz
+Source0:	http://dillo.auriga.wearlab.de/download/%{name}-%{version}.tar.gz
 Source1:	%{name}.desktop
 Source2:	%{name}.png
 Patch0:		%{name}-gzip_fallback.patch
-Patch1:		http://matzar.republika.pl/stuff/%{name}-gettext.patch.gz
-Patch2:		http://bobuk.ipost.ru/packages/dillo/files/%{name}-%{version}-charset.patch
-Patch3:		%{name}-encodings.patch
-Patch4:		%{name}-localedir.patch
-URL:		http://dillo.cipsga.org.br/
+#Patch1:		%{name}-gettext.patch
+#Patch2:		http://bobuk.ipost.ru/packages/dillo/files/%{name}-0.6.6-charset.patch
+#Patch3:		%{name}-encodings.patch
+#Patch4:		%{name}-localedir.patch
+Patch1:		%{name}-0.7.0-alt-asp-charset-encodings-sysconfdir.patch
+URL:		http://dillo.auriga.wearlab.de/
 BuildRequires:	autoconf
 BuildRequires:	automake
 BuildRequires:	gtk+-devel >= 1.2.0
@@ -21,6 +23,7 @@ BuildRequires:	libjpeg-devel
 Buildrequires:	libpng-devel >= 1.0.9
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
+%define	_sysconfdir /etc/dillo
 
 %description
 Dillo is small, fast, based on GTK+ library web browser written in C.
@@ -33,9 +36,6 @@ sieci.
 %setup -q
 %patch0 -p1
 %patch1 -p1
-%patch2 -p1
-%patch3 -p1
-%patch4 -p1
 
 %build
 rm -f missing
@@ -48,21 +48,23 @@ rm -f missing
 
 %install
 rm -rf $RPM_BUILD_ROOT
-install -d $RPM_BUILD_ROOT{%{_applnkdir}/Network/WWW,%{_pixmapsdir}}
+install -d $RPM_BUILD_ROOT{%{_applnkdir}/Network/WWW,%{_pixmapsdir},%{_sysconfdir}}
 
 %{__make} install DESTDIR=$RPM_BUILD_ROOT
 
 install %{SOURCE1} $RPM_BUILD_ROOT%{_applnkdir}/Network/WWW
 install %{SOURCE2} $RPM_BUILD_ROOT%{_pixmapsdir}
 
-%find_lang %{name}
+#%%find_lang %{name}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
-%files -f %{name}.lang
+#%%files -f %{name}.lang
+%files
 %defattr(644,root,root,755)
 %doc AUTHORS ChangeLog dillorc encodings doc/{*.txt,README}
 %attr(755,root,root) %{_bindir}/dillo
 %{_applnkdir}/Network/WWW/*
 %{_pixmapsdir}/*
+%{_sysconfdir}/*
