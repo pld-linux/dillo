@@ -24,7 +24,7 @@ BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
 Dillo is a small GTK+ based (GNOME is NOT required!) web browser.
-Dillo aims to be a multi-platform browser alternative that's small, 
+Dillo aims to be a multi-platform browser alternative that's small,
 stable, developer-friendly, usable, fast, and extensible.
 
 %description -l pl
@@ -73,4 +73,4 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_libdir}/dillo
 %attr(755,root,root) %{_libdir}/dillo/*
 %dir %{_sysconfdir}
-%config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/*
+%config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/*
