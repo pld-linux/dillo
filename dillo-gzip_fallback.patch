@@ -1,5 +1,6 @@
---- dillo-0.8.4/dpi/file.c.orig	2004-12-28 21:08:13.000000000 +0100
-+++ dillo-0.8.4/dpi/file.c	2005-01-22 21:46:07.825296392 +0100
+diff -urN dillo-0.8.6.orig/dpi/file.c dillo-0.8.6/dpi/file.c
+--- dillo-0.8.6.orig/dpi/file.c	2006-04-11 19:50:23.000000000 +0200
++++ dillo-0.8.6/dpi/file.c	2006-08-20 20:27:22.392356500 +0200
 @@ -15,6 +15,7 @@
   * With new HTML layout.
   */
@@ -8,15 +9,15 @@
  #include <pthread.h>
  
  #include <ctype.h>           /* for tolower */
-@@ -32,6 +33,7 @@
+@@ -33,6 +34,7 @@
+ #include <time.h>
  #include <signal.h>
- #include <errno.h>           /* for errno */
  #include <glib.h>
 +#include <zlib.h>
  
+ #include "../dpip/dpip.h"
  #include "dpiutil.h"
- 
-@@ -71,7 +73,7 @@
+@@ -73,7 +75,7 @@
  /*
   * Forward references
   */
@@ -25,16 +26,16 @@
  static gint File_get_file(ClientInfo *Client,
                            const gchar *filename,
                            struct stat *sb,
-@@ -401,7 +403,7 @@
-       cont = "application/executable";
+@@ -343,7 +345,7 @@
+    } else if (finfo->mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
        filecont = "Executable";
     } else {
--      filecont = cont = File_content_type(finfo->full_path);
-+      filecont = cont = File_content_type(finfo->full_path, NULL);
+-      filecont = File_content_type(finfo->full_path);
++      filecont = File_content_type(finfo->full_path, NULL);
        if (!filecont || !strcmp(filecont, "application/octet-stream"))
           filecont = "unknown";
     }
-@@ -525,13 +527,24 @@
+@@ -468,13 +470,24 @@
  /*
   * Return a content type based on the extension of the filename.
   */
@@ -61,7 +62,7 @@
     e++;
  
     if (!strcasecmp(e, "gif")) {
-@@ -554,12 +567,12 @@
+@@ -497,7 +510,7 @@
   * Based on the extension, return the content_type for the file.
   * (if there's no extension, analyze the data and try to figure it out)
   */
@@ -69,31 +70,33 @@
 +static const char *File_content_type(const char *filename, int *gzipped)
  {
     gint fd;
-    const gchar *ct;
+    struct stat sb;
+@@ -505,7 +518,7 @@
+    gchar buf[256];
+    ssize_t buf_size;
  
 -   if (!(ct = File_ext(filename))) {
 +   if (!(ct = File_ext(filename, gzipped))) {
        /* everything failed, let's analyze the data... */
        if ((fd = open(filename, O_RDONLY | O_NONBLOCK)) != -1) {
-          gchar buf[256];
-@@ -582,16 +595,29 @@
- {
+          if ((buf_size = read(fd, buf, 256)) == 256 ) {
+@@ -531,25 +544,39 @@
     int res;
     struct stat sb;
+    char *msg = NULL, *d_cmd;
 +   char *tmp_filename = (char*)filename, *p;
  
     if (stat(filename, &sb) != 0) {
 +      char *e = strrchr(filename, '.');
 +      if ((e == NULL) || strcasecmp(e + 1, "gz")) {
-+	 if ((p = malloc(strlen(filename) + 4)) != NULL) {
-+	    tmp_filename = p;
-+	    strcpy(tmp_filename, filename);
-+	    strcat(tmp_filename, ".gz");
-+	    filename = tmp_filename;
-+	 }
++       if ((p = malloc(strlen(filename) + 4)) != NULL) {
++          tmp_filename = p;
++          strcpy(tmp_filename, filename);
++          strcat(tmp_filename, ".gz");
++          filename = tmp_filename;
++       }
 +      }
 +   }
-+
 +   if (stat(tmp_filename, &sb) != 0) {
        /* stat failed, prepare a file-not-found error. */
        res = FILE_NOT_FOUND;
@@ -108,63 +111,63 @@
     }
  
     if (res == FILE_NOT_FOUND) {
-@@ -602,8 +628,10 @@
-       sock_handler_printf(Client->sh, 1,
-          "<dpi cmd='send_status_message' msg='"
-          "Failed to open the %s %s'>",
--         S_ISDIR(sb.st_mode) ? "directory" : "file", filename);
-+         S_ISDIR(sb.st_mode) ? "directory" : "file", tmp_filename);
+       msg = g_strdup_printf("%s Not Found: %s",
+-               S_ISDIR(sb.st_mode) ? "Directory" : "File", filename);
++               S_ISDIR(sb.st_mode) ? "Directory" : "File", tmp_filename);
+    } else if (res == FILE_NO_ACCESS) {
+       msg = g_strdup_printf("Access denied to %s: %s",
+-               S_ISDIR(sb.st_mode) ? "Directory" : "File", filename);
++               S_ISDIR(sb.st_mode) ? "Directory" : "File", tmp_filename);
     }
 +   if(tmp_filename != filename)
 +      free(tmp_filename);
- }
- 
- /*
-@@ -644,6 +672,8 @@
+    if (msg) {
+       d_cmd = a_Dpip_build_cmd("cmd=%s msg=%s", "send_status_message", msg);
+       sock_handler_write_str(Client->sh, d_cmd, 1);
+@@ -596,6 +623,8 @@
     const gchar *ct;
-    char buf[LBUF];
+    char buf[LBUF], *d_cmd;
     gint fd, st;
 +   int gzipped = 0;
 +   gzFile gzdata;
  
     if ( (fd = open(filename, O_RDONLY | O_NONBLOCK)) < 0)
        return FILE_NO_ACCESS;
-@@ -653,15 +683,32 @@
-     * todo: a better approach could be to detect&reject those types we know
-     * for sure we don't handle (as gzip, bzip, ELF, etc)
+@@ -604,7 +633,7 @@
+     * known extension, then we do data sniffing. If this doesn't lead
+     * to a conclusion, "application/octet-stream" is sent.
      */
--   ct = File_content_type(filename);
+-   if (!(ct = File_content_type(filename)))
 +   ct = File_content_type(filename, &gzipped);
-    if (!ct || !strcmp(ct, "application/octet-stream"))
-       ct = "text/plain";
+       ct = "application/octet-stream";
  
--
     /* Send DPI command */
-    sock_handler_printf(Client->sh, 1,
-       "<dpi cmd='start_send_page' url='%s'>\n", orig_url);
+@@ -612,6 +641,24 @@
+    sock_handler_write_str(Client->sh, d_cmd, 1);
+    g_free(d_cmd);
  
-+  if (gzipped) {
-+      /* Send HTTP stream */
-+      sock_handler_printf(Client->sh, 0,
-+         "Content-Type: %s\n\n", ct);
++   if (gzipped) {
++       /* Send HTTP stream */
++       sock_handler_printf(Client->sh, 0,
++          "Content-Type: %s\n\n", ct);
 +
-+      gzdata = gzdopen(fd, "r");
-+      do {
-+          if ((st = gzread(gzdata, buf, LBUF)) > 0) {
-+      	if (sock_handler_write(Client->sh, buf, st, 0) != 0)
-+      	    break;
-+          } else if (st < 0) {
-+      	perror("[read]");
-+      	if (errno == EINTR || errno == EAGAIN)
-+      	    continue;
-+          }
-+      } while (st > 0);
-+      gzclose(gzdata);
-+  } else {
++       gzdata = gzdopen(fd, "r");
++       do {
++           if ((st = gzread(gzdata, buf, LBUF)) > 0) {
++               if (sock_handler_write(Client->sh, buf, st, 0) != 0)
++                   break;
++           } else if (st < 0) {
++               perror("[read]");
++               if (errno == EINTR || errno == EAGAIN)
++                   continue;
++           }
++       } while (st > 0);
++       gzclose(gzdata);
++   } else {
     /* Send HTTP stream */
     sock_handler_printf(Client->sh, 0,
        "Content-Type: %s\n"
-@@ -679,6 +726,7 @@
+@@ -629,6 +676,7 @@
              continue;
        }
     } while (st > 0);
@@ -172,14 +175,15 @@
  
     /* todo: It may be better to send an error report to dillo instead of
      * calling abort from g_error() */
---- dillo-0.8.4/dpi/Makefile.am.orig	2004-11-21 12:16:00.000000000 +0100
-+++ dillo-0.8.4/dpi/Makefile.am	2005-01-22 20:00:41.712011792 +0100
-@@ -18,7 +18,7 @@
- ftp_filter_dpi_LDADD = @GLIB_LIBS@
- https_filter_dpi_LDADD = @GLIB_LIBS@ @LIBSSL_LIBS@
- hello_filter_dpi_LDADD = @GLIB_LIBS@
--file_dpi_LDADD = @GLIB_LIBS@ @LIBPTHREAD_LIBS@
-+file_dpi_LDADD = @GLIB_LIBS@ @LIBPTHREAD_LIBS@ -lz
- 
- file_dpi_LDFLAGS = @LIBPTHREAD_LDFLAGS@
+diff -urN dillo-0.8.6.orig/dpi/Makefile.am dillo-0.8.6/dpi/Makefile.am
+--- dillo-0.8.6.orig/dpi/Makefile.am	2006-01-03 21:16:10.000000000 +0100
++++ dillo-0.8.6/dpi/Makefile.am	2006-08-20 20:10:16.412236750 +0200
+@@ -27,7 +27,7 @@
+ ftp_filter_dpi_LDADD = @GLIB_LIBS@ ../dpip/libDpip.a
+ https_filter_dpi_LDADD = @GLIB_LIBS@ @LIBSSL_LIBS@ ../dpip/libDpip.a
+ hello_filter_dpi_LDADD = @GLIB_LIBS@ ../dpip/libDpip.a
+-file_dpi_LDADD = @GLIB_LIBS@ @LIBPTHREAD_LIBS@ ../dpip/libDpip.a
++file_dpi_LDADD = @GLIB_LIBS@ @LIBPTHREAD_LIBS@ ../dpip/libDpip.a -lz
+ cookies_dpi_LDADD = @GLIB_LIBS@ ../dpip/libDpip.a
+ datauri_filter_dpi_LDADD = @GLIB_LIBS@ ../dpip/libDpip.a
  
