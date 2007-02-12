@@ -1,6 +1,6 @@
 # TODO gettext support
 Summary:	DILLO - The GTK+ Web Browser
-Summary(pl.UTF-8):   DILLO - przeglądarka WWW
+Summary(pl.UTF-8):	DILLO - przeglądarka WWW
 Name:		dillo
 Version:	0.8.6
 Release:	0.1
