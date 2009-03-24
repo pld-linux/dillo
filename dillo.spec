@@ -2,20 +2,22 @@
 Summary:	DILLO - The GTK+ Web Browser
 Summary(pl.UTF-8):	DILLO - przeglądarka WWW
 Name:		dillo
-Version:	0.8.6
-Release:	2
+Version:	2.0
+Release:	0.1	
 License:	GPL
 Group:		X11/Applications/Networking
 Source0:	http://www.dillo.org/download/%{name}-%{version}.tar.bz2
-# Source0-md5:	b65233d368bbd265a55effcf2c17f84b
+# Source0-md5:	bb9999cabeb4db3d915687de465dbeb0
 Source1:	%{name}.desktop
 Source2:	%{name}.png
 Patch0:		%{name}-gzip_fallback.patch
-Patch1:		%{name}-0.7.0-alt-asp-charset-encodings-sysconfdir.patch
-Patch2:		%{name}-ac.patch
+Patch1:		%{name}-ac.patch
 URL:		http://www.dillo.org/
 BuildRequires:	autoconf
 BuildRequires:	automake
+# dillo 2.x needs fltk2 to work, be careful with it since its status is
+# experimental
+#BuildRequires:	fltk2-devel
 BuildRequires:	gtk+-devel >= 1.2.0
 BuildRequires:	libjpeg-devel
 BuildRequires:	libpng-devel >= 1.0.9
@@ -38,7 +40,6 @@ użyteczna, szybka i rozszerzalna.
 %setup -q
 %patch0 -p1
 %patch1 -p1
-%patch2 -p1
 
 %build
 %{__aclocal}
@@ -46,8 +47,7 @@ użyteczna, szybka i rozszerzalna.
 %{__automake}
 %configure \
 	--enable-cookies \
-	--enable-ipv6 \
-	--disable-dlgui
+	--enable-ipv6 
 %{__make}
 
 %install
@@ -59,7 +59,6 @@ install -d $RPM_BUILD_ROOT{%{_desktopdir},%{_pixmapsdir},%{_sysconfdir}}
 
 install %{SOURCE1} $RPM_BUILD_ROOT%{_desktopdir}
 install %{SOURCE2} $RPM_BUILD_ROOT%{_pixmapsdir}
-install encodings  $RPM_BUILD_ROOT%{_sysconfdir}
 
 #%%find_lang %{name}
 
@@ -69,7 +68,7 @@ rm -rf $RPM_BUILD_ROOT
 #%%files -f %{name}.lang
 %files
 %defattr(644,root,root,755)
-%doc AUTHORS ChangeLog dillorc encodings doc/{*.txt,README}
+%doc AUTHORS ChangeLog dillorc NEWS README
 %attr(755,root,root) %{_bindir}/*
 %{_desktopdir}/*.desktop
 %{_pixmapsdir}/*
