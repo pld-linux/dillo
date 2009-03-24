@@ -1,15 +1,16 @@
-diff -burNp dillo-2.0/configure.in dillo-2.0-dud/configure.in
---- dillo-2.0/configure.in	2008-10-10 22:37:17.000000000 +0200
-+++ dillo-2.0-dud/configure.in	2009-03-24 10:43:37.021819865 +0100
-@@ -489,6 +489,11 @@ AC_SUBST(LIBFLTK_CFLAGS)
+diff -urN dillo-0.8.6/configure.in dillo-0.8.6.new/configure.in
+--- dillo-0.8.6/configure.in	2006-04-26 18:05:29.000000000 +0200
++++ dillo-0.8.6.new/configure.in	2008-07-10 18:35:01.000000000 +0200
+@@ -427,7 +427,11 @@
+ AC_SUBST(LIBFLTK_CXXFLAGS)
  AC_SUBST(LIBFLTK_LIBS)
- AC_SUBST(LIBICONV_LIBS)
  AC_SUBST(datadir)
+-AC_SUBST(src doc bin util lib)
 +AC_SUBST(src)
 +AC_SUBST(doc)
 +AC_SUBST(bin)
 +AC_SUBST(util)
 +AC_SUBST(lib)
  
- AC_OUTPUT(Makefile dlib/Makefile dpip/Makefile dpid/Makefile dpi/Makefile doc/Makefile dw/Makefile lout/Makefile src/Makefile src/IO/Makefile test/Makefile)
+ AC_OUTPUT(Makefile dpip/Makefile dpid/Makefile dpi/Makefile doc/Makefile src/Makefile src/IO/Makefile)
  
