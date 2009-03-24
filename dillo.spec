@@ -17,7 +17,7 @@ BuildRequires:	autoconf
 BuildRequires:	automake
 # dillo 2.x needs fltk2 to work, be careful with it since its status is
 # experimental
-#BuildRequires:	fltk2-devel
+BuildRequires:	fltk2-devel
 BuildRequires:	gtk+-devel >= 1.2.0
 BuildRequires:	libjpeg-devel
 BuildRequires:	libpng-devel >= 1.0.9
