@@ -17,6 +17,7 @@ Patch3:		%{name}-libpng.patch
 URL:		http://www.dillo.org/
 BuildRequires:	autoconf
 BuildRequires:	automake
+BuildRequires:	fltk-devel
 BuildRequires:	gtk+-devel >= 1.2.0
 BuildRequires:	libjpeg-devel
 BuildRequires:	libpng-devel >= 1.0.9
