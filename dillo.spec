@@ -1,5 +1,5 @@
 # TODO gettext support
-Summary:	DILLO - The GTK+ Web Browser
+Summary:	DILLO - The FLTK2 Web Browser
 Summary(pl.UTF-8):	DILLO - przeglądarka WWW
 Name:		dillo
 Version:	2.2
@@ -10,38 +10,37 @@ Source0:	http://www.dillo.org/download/%{name}-%{version}.tar.bz2
 # Source0-md5:	f8bcd62093f178bed81e46cc54e73f42
 Source1:	%{name}.desktop
 Source2:	%{name}.png
+# needs a review, disabled for now
 Patch0:		%{name}-gzip_fallback.patch
-Patch1:		%{name}-0.7.0-alt-asp-charset-encodings-sysconfdir.patch
-Patch2:		%{name}-ac.patch
-Patch3:		%{name}-libpng.patch
+Patch1:		%{name}-ac.patch
 URL:		http://www.dillo.org/
 BuildRequires:	autoconf
 BuildRequires:	automake
-BuildRequires:	fltk-devel
-BuildRequires:	gtk+-devel >= 1.2.0
+# dillo 2.x needs fltk2 to work, be careful with it since its status is
+# experimental
+BuildRequires:	fltk2-devel
 BuildRequires:	libjpeg-devel
 BuildRequires:	libpng-devel >= 1.0.9
+BuildRequires:	zlib-devel
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %define		_sysconfdir	/etc/dillo
 
 %description
-Dillo is a small GTK+ based (GNOME is NOT required!) web browser.
+Dillo 2.x is a small FLTK2 based (GNOME is NOT required!) web browser.
 Dillo aims to be a multi-platform browser alternative that's small,
 stable, developer-friendly, usable, fast, and extensible.
 
 %description -l pl.UTF-8
-Dillo jest małą, opartą na bibliotece GTK+ (GNOME nie jest wymagany)
+Dillo 2.x jest małą, opartą na bibliotece FLTK2 (GNOME nie jest wymagany)
 przeglądarką WWW. Dillo ma być wieloplatformową alternatywną
 przeglądarką, która jest mała, stabilna, przyjazna dla developerów,
 użyteczna, szybka i rozszerzalna.
 
 %prep
 %setup -q
-#patch0 -p1
-#patch1 -p1
-#patch2 -p1
-%patch3 -p1
+#%%patch0 -p1
+%patch1 -p1
 
 %build
 %{__aclocal}
@@ -49,8 +48,7 @@ użyteczna, szybka i rozszerzalna.
 %{__automake}
 %configure \
 	--enable-cookies \
-	--enable-ipv6 \
-	--disable-dlgui
+	--enable-ipv6 
 %{__make}
 
 %install
@@ -62,7 +60,6 @@ install -d $RPM_BUILD_ROOT{%{_desktopdir},%{_pixmapsdir},%{_sysconfdir}}
 
 install %{SOURCE1} $RPM_BUILD_ROOT%{_desktopdir}
 install %{SOURCE2} $RPM_BUILD_ROOT%{_pixmapsdir}
-install encodings  $RPM_BUILD_ROOT%{_sysconfdir}
 
 #%%find_lang %{name}
 
@@ -72,7 +69,7 @@ rm -rf $RPM_BUILD_ROOT
 #%%files -f %{name}.lang
 %files
 %defattr(644,root,root,755)
-%doc AUTHORS ChangeLog dillorc encodings doc/{*.txt,README}
+%doc AUTHORS ChangeLog dillorc NEWS README
 %attr(755,root,root) %{_bindir}/*
 %{_desktopdir}/*.desktop
 %{_pixmapsdir}/*
