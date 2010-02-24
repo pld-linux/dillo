@@ -13,6 +13,7 @@ Source2:	%{name}.png
 # needs a review, disabled for now
 Patch0:		%{name}-gzip_fallback.patch
 Patch1:		%{name}-ac.patch
+Patch2:		%{name}-libpng.patch
 URL:		http://www.dillo.org/
 BuildRequires:	autoconf
 BuildRequires:	automake
@@ -41,6 +42,7 @@ użyteczna, szybka i rozszerzalna.
 %setup -q
 #%%patch0 -p1
 %patch1 -p1
+%patch2 -p1
 
 %build
 %{__aclocal}
