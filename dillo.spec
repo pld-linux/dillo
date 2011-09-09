@@ -2,12 +2,12 @@
 Summary:	DILLO - The FLTK2 Web Browser
 Summary(pl.UTF-8):	DILLO - przeglądarka WWW
 Name:		dillo
-Version:	2.2
+Version:	3.0
 Release:	0.1
 License:	GPL
 Group:		X11/Applications/Networking
 Source0:	http://www.dillo.org/download/%{name}-%{version}.tar.bz2
-# Source0-md5:	f8bcd62093f178bed81e46cc54e73f42
+# Source0-md5:	448f44a923222270cb0c84e55adc1be1
 Source1:	%{name}.desktop
 Source2:	%{name}.png
 # needs a review, disabled for now
