@@ -1,25 +1,23 @@
 # TODO gettext support
-Summary:	DILLO - The FLTK2 Web Browser
+Summary:	DILLO - The FLTK Web Browser
 Summary(pl.UTF-8):	DILLO - przeglądarka WWW
 Name:		dillo
-Version:	3.0
-Release:	0.1
+Version:	3.0.2
+Release:	1
 License:	GPL
 Group:		X11/Applications/Networking
 Source0:	http://www.dillo.org/download/%{name}-%{version}.tar.bz2
-# Source0-md5:	448f44a923222270cb0c84e55adc1be1
+# Source0-md5:	81b82112cefcc7d54fe2972a21f42930
 Source1:	%{name}.desktop
 Source2:	%{name}.png
 # needs a review, disabled for now
 Patch0:		%{name}-gzip_fallback.patch
 Patch1:		%{name}-ac.patch
-Patch2:		%{name}-libpng.patch
+#Patch2:		%{name}-libpng.patch
 URL:		http://www.dillo.org/
 BuildRequires:	autoconf
 BuildRequires:	automake
-# dillo 2.x needs fltk2 to work, be careful with it since its status is
-# experimental
-BuildRequires:	fltk2-devel
+BuildRequires:	fltk-devel >= 1.3.0
 BuildRequires:	libjpeg-devel
 BuildRequires:	libpng-devel >= 1.0.9
 BuildRequires:	zlib-devel
@@ -28,12 +26,12 @@ BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 %define		_sysconfdir	/etc/dillo
 
 %description
-Dillo 2.x is a small FLTK2 based (GNOME is NOT required!) web browser.
+Dillo is a small FLTK based (GNOME is NOT required!) web browser.
 Dillo aims to be a multi-platform browser alternative that's small,
 stable, developer-friendly, usable, fast, and extensible.
 
 %description -l pl.UTF-8
-Dillo 2.x jest małą, opartą na bibliotece FLTK2 (GNOME nie jest wymagany)
+Dillo jest małą, opartą na bibliotece FLTK (GNOME nie jest wymagany)
 przeglądarką WWW. Dillo ma być wieloplatformową alternatywną
 przeglądarką, która jest mała, stabilna, przyjazna dla developerów,
 użyteczna, szybka i rozszerzalna.
@@ -42,7 +40,6 @@ użyteczna, szybka i rozszerzalna.
 %setup -q
 #%%patch0 -p1
 %patch1 -p1
-%patch2 -p1
 
 %build
 %{__aclocal}
