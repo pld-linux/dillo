@@ -1,29 +1,27 @@
-# TODO gettext support
+# TODO: gettext support (there was a patch for some archaic version)
 Summary:	DILLO - The FLTK Web Browser
 Summary(pl.UTF-8):	DILLO - przeglądarka WWW
 Name:		dillo
-Version:	3.0.2
-Release:	3
-License:	GPL
+Version:	3.0.3
+Release:	1
+License:	GPL v3+
 Group:		X11/Applications/Networking
 Source0:	http://www.dillo.org/download/%{name}-%{version}.tar.bz2
-# Source0-md5:	81b82112cefcc7d54fe2972a21f42930
+# Source0-md5:	726cd0b7a18c5e25f4d80ebeffe7607e
 Source1:	%{name}.desktop
 Source2:	%{name}.png
 # needs a review, disabled for now
 Patch0:		%{name}-gzip_fallback.patch
-Patch1:		%{name}-ac.patch
-#Patch2:		%{name}-libpng.patch
 URL:		http://www.dillo.org/
-BuildRequires:	autoconf
+BuildRequires:	autoconf >= 2.50
 BuildRequires:	automake
 BuildRequires:	fltk-devel >= 1.3.0
 BuildRequires:	libjpeg-devel
 BuildRequires:	libpng-devel >= 1.0.9
+BuildRequires:	libstdc++-devel
+BuildRequires:	openssl-devel
 BuildRequires:	zlib-devel
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
-
-%define		_sysconfdir	/etc/dillo
 
 %description
 Dillo is a small FLTK based (GNOME is NOT required!) web browser.
@@ -39,15 +37,16 @@ użyteczna, szybka i rozszerzalna.
 %prep
 %setup -q
 #%%patch0 -p1
-%patch1 -p1
 
 %build
 %{__aclocal}
 %{__autoconf}
+%{__autoheader}
 %{__automake}
 %configure \
 	--enable-cookies \
-	--enable-ipv6 
+	--enable-ipv6 \
+	--enable-ssl
 %{__make}
 
 %install
@@ -68,12 +67,22 @@ rm -rf $RPM_BUILD_ROOT
 #%%files -f %{name}.lang
 %files
 %defattr(644,root,root,755)
-%doc AUTHORS ChangeLog dillorc NEWS README
-%attr(755,root,root) %{_bindir}/*
-%{_desktopdir}/*.desktop
-%{_pixmapsdir}/*
+%doc AUTHORS ChangeLog NEWS README
+%attr(755,root,root) %{_bindir}/dillo
+%attr(755,root,root) %{_bindir}/dillo-install-hyphenation
+%attr(755,root,root) %{_bindir}/dpid
+%attr(755,root,root) %{_bindir}/dpidc
 %dir %{_libdir}/dillo
-%attr(755,root,root) %{_libdir}/dillo/*
-%dir %{_sysconfdir}
-%config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/*
+%dir %{_libdir}/dillo/dpi
+%dir %{_libdir}/dillo/dpi/*
+%attr(755,root,root) %{_libdir}/dillo/dpi/*/*.dpi
+%dir %{_docdir}/dillo
+%{_docdir}/dillo/user_help.html
+%dir %{_sysconfdir}/dillo
+%config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/dillo/dillorc
+%config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/dillo/domainrc
+%config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/dillo/dpidrc
+%config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/dillo/keysrc
+%{_desktopdir}/dillo.desktop
+%{_pixmapsdir}/dillo.png
 %{_mandir}/man1/dillo.1*
