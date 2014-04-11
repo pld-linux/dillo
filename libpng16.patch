@@ -1,12 +1,14 @@
---- dillo-3.0.4/configure.ac.orig	2014-04-11 21:17:09.271354861 +0200
-+++ dillo-3.0.4/configure.ac	2014-04-11 21:17:57.221092019 +0200
-@@ -208,6 +208,9 @@
+--- dillo-3.0.4/configure.ac.orig	2014-04-11 21:29:42.413940247 +0200
++++ dillo-3.0.4/configure.ac	2014-04-11 21:30:37.783645035 +0200
+@@ -208,7 +208,10 @@ if test "x$enable_png" = "xyes"; then
  
  dnl Check if the user hasn't set the variable $PNG_CONFIG
    if test -z "$PNG_CONFIG"; then
+-    PNG_CONFIG=`which libpng14-config`
 +    PNG_CONFIG=`which libpng16-config`
-+    fi
 +    if test -z "$PNG_CONFIG"; then
-     PNG_CONFIG=`which libpng14-config`
++      PNG_CONFIG=`which libpng14-config`
++    fi
      if test -z "$PNG_CONFIG"; then
        PNG_CONFIG=`which libpng12-config`
+     fi
