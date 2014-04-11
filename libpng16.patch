@@ -1,0 +1,12 @@
+--- dillo-3.0.4/configure.ac.orig	2014-04-11 21:17:09.271354861 +0200
++++ dillo-3.0.4/configure.ac	2014-04-11 21:17:57.221092019 +0200
+@@ -208,6 +208,9 @@
+ 
+ dnl Check if the user hasn't set the variable $PNG_CONFIG
+   if test -z "$PNG_CONFIG"; then
++    PNG_CONFIG=`which libpng16-config`
++    fi
++    if test -z "$PNG_CONFIG"; then
+     PNG_CONFIG=`which libpng14-config`
+     if test -z "$PNG_CONFIG"; then
+       PNG_CONFIG=`which libpng12-config`
