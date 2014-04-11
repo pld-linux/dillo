@@ -18,7 +18,7 @@ BuildRequires:	autoconf >= 2.50
 BuildRequires:	automake
 BuildRequires:	fltk-devel >= 1.3.0
 BuildRequires:	libjpeg-devel
-BuildRequires:	libpng-devel >= 1.6.0
+BuildRequires:	libpng-devel >= 2:1.6.0
 BuildRequires:	libstdc++-devel
 BuildRequires:	openssl-devel
 BuildRequires:	zlib-devel
