@@ -2,17 +2,16 @@
 Summary:	DILLO - The FLTK Web Browser
 Summary(pl.UTF-8):	DILLO - przeglądarka WWW
 Name:		dillo
-Version:	3.0.4
-Release:	2
+Version:	3.0.5
+Release:	1
 License:	GPL v3+
 Group:		X11/Applications/Networking
 Source0:	http://www.dillo.org/download/%{name}-%{version}.tar.bz2
-# Source0-md5:	c85aab6b840527e1dd71b220a1dcfbab
+# Source0-md5:	554aad93b6107bba696f4da022c41561
 Source1:	%{name}.desktop
 Source2:	%{name}.png
 # needs a review, disabled for now
 Patch0:		%{name}-gzip_fallback.patch
-Patch1:		libpng16.patch
 URL:		http://www.dillo.org/
 BuildRequires:	autoconf >= 2.50
 BuildRequires:	automake
@@ -38,7 +37,6 @@ użyteczna, szybka i rozszerzalna.
 %prep
 %setup -q
 #%%patch0 -p1
-%patch1 -p1
 
 %build
 %{__aclocal}
