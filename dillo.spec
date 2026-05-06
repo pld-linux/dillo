@@ -1,4 +1,3 @@
-# TODO: gettext support (there was a patch for some archaic version)
 Summary:	DILLO - The FLTK Web Browser
 Summary(pl.UTF-8):	DILLO - przeglądarka WWW
 Name:		dillo
@@ -56,12 +55,9 @@ install -d $RPM_BUILD_ROOT{%{_desktopdir},%{_pixmapsdir},%{_sysconfdir}}
 install %{SOURCE1} $RPM_BUILD_ROOT%{_desktopdir}
 install %{SOURCE2} $RPM_BUILD_ROOT%{_pixmapsdir}
 
-#%%find_lang %{name}
-
 %clean
 rm -rf $RPM_BUILD_ROOT
 
-#%%files -f %{name}.lang
 %files
 %defattr(644,root,root,755)
 %doc AUTHORS ChangeLog NEWS README
