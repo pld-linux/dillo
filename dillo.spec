@@ -6,13 +6,13 @@ Version:	3.0.5
 Release:	2
 License:	GPL v3+
 Group:		X11/Applications/Networking
-Source0:	http://www.dillo.org/download/%{name}-%{version}.tar.bz2
+Source0:	https://dillo-browser.org/old/download/%{name}-%{version}.tar.bz2
 # Source0-md5:	554aad93b6107bba696f4da022c41561
 Source1:	%{name}.desktop
 Source2:	%{name}.png
 # needs a review, disabled for now
 Patch0:		%{name}-gzip_fallback.patch
-URL:		http://www.dillo.org/
+URL:		https://dillo-browser.org/
 BuildRequires:	autoconf >= 2.50
 BuildRequires:	automake
 BuildRequires:	fltk-devel >= 1.3.0
