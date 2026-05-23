@@ -1,3 +1,7 @@
+#
+# Conditional build:
+%bcond_with	fltk14	# experimental FLTK 1.4.x support (known graphical issues)
+
 Summary:	DILLO - The FLTK Web Browser
 Summary(pl.UTF-8):	DILLO - przeglądarka WWW
 Name:		dillo
@@ -13,6 +17,11 @@ URL:		https://dillo-browser.org/
 BuildRequires:	autoconf >= 2.50
 BuildRequires:	automake
 BuildRequires:	fltk-devel >= 1.3.0
+%if %{with fltk14}
+BuildRequires:	fltk-devel >= 1.4.0
+%else
+BuildRequires:	fltk-devel < 1.4.0
+%endif
 BuildRequires:	libbrotli-devel
 BuildRequires:	libjpeg-devel
 BuildRequires:	libpng-devel >= 2:1.6.0
@@ -48,6 +57,7 @@ użyteczna, szybka i rozszerzalna.
 %{__automake}
 %configure \
 	--enable-cookies \
+	%{?with_fltk14:--enable-experimental-fltk} \
 	--enable-ipv6 \
 	--enable-tls
 %{__make}
